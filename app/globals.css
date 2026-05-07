@@ -1,27 +1,107 @@
+/* ───────────────────────────────────────────
+   Pretendard 폰트 (공공 CDN, Variable)
+   ─────────────────────────────────────────── */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ───────────────────────────────────────────
+   디자인 토큰 (CSS 변수)
+   tailwind.config.js와 동일 값 미러링
+   ─────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 호환성 */
+  --background: #F5F6FA;
+  --foreground: #111827;
+
+  /* 브랜드 */
+  --color-brand-blue: #3B82F6;
+  --color-brand-blue-hover: #2563EB;
+  --color-brand-blue-light: #EFF6FF;
+  --color-brand-blue-dark: #1E40AF;
+
+  --color-brand-yellow: #FFD93B;
+  --color-brand-yellow-hover: #F5C518;
+  --color-brand-yellow-light: #FFF4C2;
+  --color-brand-yellow-dark: #E0A800;
+
+  /* 표면 */
+  --color-surface-page: #F5F6FA;
+  --color-surface-card: #FFFFFF;
+  --color-surface-muted: #F3F4F6;
+
+  /* 텍스트 */
+  --color-ink-primary: #111827;
+  --color-ink-secondary: #4B5563;
+  --color-ink-tertiary: #9CA3AF;
+  --color-ink-inverse: #FFFFFF;
+
+  /* 보더 */
+  --color-line: #E5E7EB;
+  --color-line-strong: #D1D5DB;
+  --color-line-focus: #3B82F6;
+
+  /* 반응형 컨테이너 */
+  --container-padding: 1rem;
+  --container-max: 100%;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (min-width: 640px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --container-padding: 1.5rem;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: 2rem;
+    --container-max: 1024px;
+  }
 }
 
+/* ───────────────────────────────────────────
+   기본 스타일 (다크모드 자동감지 제거 — 라이트 테마 고정)
+   ─────────────────────────────────────────── */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  color: var(--color-ink-primary);
+  background: var(--color-surface-page);
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo',
+    'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  font-feature-settings: 'tnum' 1; /* 숫자 폭 균등 — 시간/카운트 표시 깔끔 */
+}
+
+/* ───────────────────────────────────────────
+   유틸리티
+   ─────────────────────────────────────────── */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* 진입 애니메이션 stagger 헬퍼 */
+  .anim-delay-100 { animation-delay: 100ms; }
+  .anim-delay-200 { animation-delay: 200ms; }
+  .anim-delay-300 { animation-delay: 300ms; }
+  .anim-delay-400 { animation-delay: 400ms; }
+  .anim-delay-500 { animation-delay: 500ms; }
+}
+
+/* ───────────────────────────────────────────
+   접근성 — 포커스 링 (키보드 사용자)
+   ─────────────────────────────────────────── */
+@layer base {
+  *:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+    border-radius: 4px;
   }
 }
