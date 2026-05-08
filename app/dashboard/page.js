@@ -11,19 +11,18 @@ import Logo from '../../app/components/Logo';
 // 카테고리 (LLM extracted_info.category_code 기준)
 // ──────────────────────────────────────────────────────
 const CATEGORY_INFO = {
-  reservation:        { label: '예약',     icon: '📅', color: 'green' },
-  order:              { label: '주문',     icon: '🛵', color: 'blue' },
-  cancel_refund:      { label: '취소',     icon: '↩️', color: 'orange' },
-  complaint:          { label: '불만',     icon: '⚠️', color: 'red' },
-  hours_location:     { label: '문의',     icon: '💬', color: 'sky' },
-  price:              { label: '가격',     icon: '💰', color: 'sky' },
-  ingredients_allergy:{ label: '알레르기', icon: '🥜', color: 'amber' },
-  catering_bulk:      { label: '단체',     icon: '🍱', color: 'indigo' },
-  positive:           { label: '칭찬',     icon: '💜', color: 'purple' },
-  other:              { label: '기타',     icon: '📞', color: 'gray' },
+  reservation:        { label: '예약',     color: 'green'  },
+  order:              { label: '주문',     color: 'blue'   },
+  cancel_refund:      { label: '취소',     color: 'orange' },
+  complaint:          { label: '불만',     color: 'red'    },
+  hours_location:     { label: '문의',     color: 'sky'    },
+  price:              { label: '가격',     color: 'sky'    },
+  ingredients_allergy:{ label: '알레르기', color: 'amber'  },
+  catering_bulk:      { label: '단체',     color: 'indigo' },
+  positive:           { label: '칭찬',     color: 'purple' },
+  other:              { label: '기타',     color: 'gray'   },
 };
 
-// 한글 category(LLM 첫 응답)도 매핑 (구버전 데이터 호환)
 const KO_CATEGORY_MAP = {
   '예약': 'reservation',
   '주문': 'order',
@@ -35,31 +34,16 @@ const KO_CATEGORY_MAP = {
   '기타': 'other',
 };
 
-// 색상별 Tailwind 클래스
 const COLOR_STYLES = {
-  green:  { badge: 'bg-emerald-100 text-emerald-700',  bar: 'bg-emerald-500'  },
-  blue:   { badge: 'bg-blue-100 text-blue-700',        bar: 'bg-blue-500'     },
-  orange: { badge: 'bg-orange-100 text-orange-700',    bar: 'bg-orange-500'   },
-  red:    { badge: 'bg-red-100 text-red-700',          bar: 'bg-red-500'      },
-  sky:    { badge: 'bg-sky-100 text-sky-700',          bar: 'bg-sky-500'      },
-  amber:  { badge: 'bg-amber-100 text-amber-800',      bar: 'bg-amber-500'    },
-  indigo: { badge: 'bg-indigo-100 text-indigo-700',    bar: 'bg-indigo-500'   },
-  purple: { badge: 'bg-purple-100 text-purple-700',    bar: 'bg-purple-500'   },
-  gray:   { badge: 'bg-gray-100 text-gray-700',        bar: 'bg-gray-400'     },
-};
-
-// 가게 이모지 자동 매핑
-const guessStoreEmoji = (name = '') => {
-  if (/햄버거|버거/.test(name)) return '🍔';
-  if (/카페|coffee|커피/.test(name)) return '☕';
-  if (/치킨|닭/.test(name)) return '🍗';
-  if (/피자/.test(name)) return '🍕';
-  if (/김밥/.test(name)) return '🍙';
-  if (/술|호프|주점/.test(name)) return '🍺';
-  if (/빵|베이커리/.test(name)) return '🥐';
-  if (/돼지|고기|구이/.test(name)) return '🥩';
-  if (/칼국수|면|국수/.test(name)) return '🍜';
-  return '🏪';
+  green:  'bg-emerald-50 text-emerald-700 border-emerald-200',
+  blue:   'bg-blue-50 text-blue-700 border-blue-200',
+  orange: 'bg-orange-50 text-orange-700 border-orange-200',
+  red:    'bg-red-50 text-red-700 border-red-200',
+  sky:    'bg-sky-50 text-sky-700 border-sky-200',
+  amber:  'bg-amber-50 text-amber-800 border-amber-200',
+  indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  purple: 'bg-purple-50 text-purple-700 border-purple-200',
+  gray:   'bg-gray-50 text-gray-700 border-gray-200',
 };
 
 export default function DashboardPage() {
@@ -79,9 +63,6 @@ export default function DashboardPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // ──────────────────────────────────────────────────────
-  // 🔒 인증 + 데이터 로드
-  // ──────────────────────────────────────────────────────
   useEffect(() => {
     const unsubscribe = watchAuthState(async (firebaseUser) => {
       if (firebaseUser) {
@@ -133,7 +114,6 @@ export default function DashboardPage() {
     }
   };
 
-  // 파일 업로드 (기존 로직 유지)
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -206,9 +186,6 @@ export default function DashboardPage() {
     }
   };
 
-  // ──────────────────────────────────────────────────────
-  // 🧮 가공 데이터
-  // ──────────────────────────────────────────────────────
   const storeMap = useMemo(() => {
     const m = {};
     stores.forEach((s) => { m[s.id] = s; });
@@ -229,9 +206,6 @@ export default function DashboardPage() {
     };
   }, [calls]);
 
-  // ──────────────────────────────────────────────────────
-  // 포맷 헬퍼
-  // ──────────────────────────────────────────────────────
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
@@ -401,7 +375,7 @@ export default function DashboardPage() {
           ) : calls.length === 0 ? (
             <EmptyState />
           ) : (
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-3">
               {calls.map((call) => (
                 <CallCard
                   key={call.id}
@@ -460,305 +434,113 @@ function StatItem({ num, name }) {
 }
 
 // ══════════════════════════════════════════════════════
-// 🆕 통화 카드 (카테고리별 다른 레이아웃)
+// 🆕 통화 카드 (라벨식 정돈된 레이아웃)
 // ══════════════════════════════════════════════════════
 function CallCard({ call, store, onDelete, formatDate, formatDuration }) {
   const cat = call.caller_category || 'UNCLASSIFIED';
 
-  // PERSONAL은 마스킹 카드로 표시
+  // PERSONAL은 마스킹 카드로
   if (cat === 'PERSONAL') {
     return <MaskedCard call={call} onDelete={onDelete} formatDate={formatDate} formatDuration={formatDuration} />;
   }
 
-  // extracted_info 파싱 (DB에서 JSON으로 옴 — 문자열일 수도 객체일 수도)
+  // extracted_info 파싱
   let info = call.extracted_info;
   if (typeof info === 'string') {
     try { info = JSON.parse(info); } catch { info = null; }
   }
 
-  // category_code 결정 (LLM이 준 영문 코드 우선, 없으면 한글 매핑)
   const categoryCode =
     info?.category_code ||
     KO_CATEGORY_MAP[call.category] ||
     'other';
 
   const catInfo = CATEGORY_INFO[categoryCode] || CATEGORY_INFO.other;
-  const styles = COLOR_STYLES[catInfo.color];
+  const badgeStyle = COLOR_STYLES[catInfo.color];
 
-  const displayNumber = call.caller_number || '발신번호 없음';
-  const storeName = store?.name || '';
-  const storeEmoji = guessStoreEmoji(storeName);
+  const phone = call.caller_number || '발신번호 없음';
+
+  // 라벨식 정보 행 만들기 (값 있는 것만)
+  const rows = [];
+  if (info?.customer_name) rows.push(['성명', info.customer_name]);
+  if (info?.date)          rows.push(['날짜', formatNiceDate(info.date)]);
+  if (info?.time)          rows.push(['시간', info.time]);
+  if (info?.party_size)    rows.push(['인원', `${info.party_size}명`]);
+  if (info?.menu && info.menu.length > 0) rows.push(['메뉴', info.menu.join(', ')]);
+  if (info?.special_notes) rows.push(['특이사항', info.special_notes]);
 
   return (
     <Link
       href={`/calls/${call.id}`}
-      className="relative block bg-white border border-line rounded-[14px] overflow-hidden cursor-pointer transition-all hover:border-brand-blue hover:translate-x-0.5 hover:shadow-[0_4px_12px_rgba(59,130,246,0.08)]"
+      className="block bg-white border border-line rounded-[14px] p-5 sm:p-6 cursor-pointer transition-all hover:border-brand-blue hover:shadow-[0_4px_12px_rgba(59,130,246,0.08)]"
     >
-      {/* 좌측 컬러 바 (action_required는 빨간색, 일반은 카테고리 색) */}
-      <div
-        className={`absolute left-0 top-0 bottom-0 w-1 ${
-          call.action_required === 1 ? 'bg-red-500' : styles.bar
-        }`}
-      />
-
-      <div className="pl-4 pr-3 py-3.5 sm:pl-5 sm:pr-4 sm:py-4">
-        {/* ─── 헤더: 배지 + 우측 메타 ─── */}
-        <div className="flex items-start justify-between gap-2 mb-2.5">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {/* 카테고리 배지 */}
-            <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-[3px] rounded-md ${styles.badge}`}>
-              <span>{catInfo.icon}</span>
-              <span>{catInfo.label}</span>
+      {/* ─── 헤더: 카테고리 배지 + 우상단 메타 ─── */}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className={`inline-flex items-center text-[11px] font-bold px-2 py-[3px] rounded-md border ${badgeStyle}`}>
+            {catInfo.label}
+          </span>
+          {call.is_read === 0 && call.status === 'summarized' && (
+            <span className="text-[10px] font-bold px-[7px] py-[3px] rounded-full bg-status-new-bg text-status-new-text tracking-wide">
+              NEW
             </span>
-
-            {/* NEW 배지 */}
-            {call.is_read === 0 && call.status === 'summarized' && (
-              <span className="text-[10px] font-bold px-[7px] py-[3px] rounded-full bg-status-new-bg text-status-new-text tracking-wide">
-                NEW
-              </span>
-            )}
-
-            {/* 처리필요 배지 */}
-            {call.action_required === 1 && (
-              <span className="text-[10px] font-bold px-[7px] py-[3px] rounded-full bg-red-100 text-red-700">
-                처리필요
-              </span>
-            )}
-
-            {/* 가게 배지 (여러 가게 있을 때만 의미 있음) */}
-            {storeName && (
-              <span className="hidden sm:inline-flex text-[10px] font-semibold px-2 py-[3px] rounded-md bg-surface-muted text-ink-secondary">
-                {storeEmoji} {storeName}
-              </span>
-            )}
-          </div>
-
-          {/* 우측: 통화 길이 + 삭제 */}
-          <div className="flex items-center gap-1.5 flex-none">
-            <span className="text-[11px] text-ink-tertiary tabular-nums">
-              {formatDuration(call.duration)}
+          )}
+          {call.action_required === 1 && (
+            <span className="text-[10px] font-bold px-[7px] py-[3px] rounded-full bg-red-100 text-red-700">
+              처리필요
             </span>
-            <button
-              onClick={(e) => onDelete(call.id, e)}
-              className="w-7 h-7 rounded-[8px] text-ink-tertiary hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-all"
-              title="삭제"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-              </svg>
-            </button>
-          </div>
+          )}
         </div>
 
-        {/* ─── 본문: 카테고리별로 다른 레이아웃 ─── */}
-        <CardBody categoryCode={categoryCode} info={info} call={call} />
-
-        {/* ─── 하단: 발신번호 + 시각 ─── */}
-        <div className="mt-3 pt-2.5 border-t border-line flex items-center justify-between gap-2 text-[12px] text-ink-tertiary">
-          <span className="inline-flex items-center gap-1 truncate">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-none">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+        <div className="flex items-center gap-2 flex-none text-[12px] text-ink-tertiary">
+          <span>{formatDate(call.created_at)}</span>
+          <span className="text-line">·</span>
+          <span className="tabular-nums">{formatDuration(call.duration)}</span>
+          <button
+            onClick={(e) => onDelete(call.id, e)}
+            className="ml-1 w-7 h-7 rounded-[8px] hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition-all"
+            title="삭제"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
             </svg>
-            <span className="truncate">{displayNumber}</span>
-          </span>
-          <span className="flex-none">{formatDate(call.created_at)}</span>
+          </button>
         </div>
       </div>
+
+      {/* ─── 메인: 전화번호 (제일 큼) ─── */}
+      <div className="text-[20px] sm:text-[22px] font-bold text-ink-primary tracking-tight mb-4 tabular-nums">
+        {phone}
+      </div>
+
+      {/* ─── 라벨-값 정보 리스트 ─── */}
+      {rows.length > 0 && (
+        <div className="space-y-1.5 mb-4">
+          {rows.map(([label, value]) => (
+            <div key={label} className="flex items-start gap-3 text-[13px]">
+              <span className="flex-none w-14 text-ink-tertiary">{label}</span>
+              <span className="flex-1 text-ink-primary font-medium">{value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ─── 초록색 AI 요약 박스 ─── */}
+      {call.summary && (
+        <div className="bg-emerald-50 border border-emerald-100 rounded-[10px] px-3.5 py-3">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 mb-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L9.5 8.5 3 9l5 4.5L6.5 20 12 16.5 17.5 20 16 13.5 21 9l-6.5-.5L12 2z"/>
+            </svg>
+            AI 요약
+          </div>
+          <div className="text-[13px] text-emerald-900 leading-relaxed">
+            {call.summary}
+          </div>
+        </div>
+      )}
     </Link>
-  );
-}
-
-// ──────────────────────────────────────────────────────
-// 카드 본문: 카테고리별 분기
-// ──────────────────────────────────────────────────────
-function CardBody({ categoryCode, info, call }) {
-  // 데이터가 아예 없으면 fallback (구버전 데이터 / extracted_info 누락)
-  if (!info) {
-    return (
-      <div className="text-[13px] text-ink-secondary leading-snug line-clamp-2">
-        {call.summary || '요약 정보 없음'}
-      </div>
-    );
-  }
-
-  switch (categoryCode) {
-    case 'reservation':
-      return <ReservationBody info={info} />;
-    case 'cancel_refund':
-      return <CancelBody info={info} />;
-    case 'complaint':
-      return <ComplaintBody info={info} call={call} />;
-    case 'order':
-    case 'catering_bulk':
-      return <OrderBody info={info} />;
-    case 'positive':
-      return <PositiveBody info={info} />;
-    case 'hours_location':
-    case 'price':
-    case 'ingredients_allergy':
-    case 'other':
-    default:
-      return <InquiryBody info={info} call={call} />;
-  }
-}
-
-// ─── 예약 ───
-function ReservationBody({ info }) {
-  return (
-    <div className="space-y-1.5">
-      {info.customer_name && (
-        <div className="text-[15px] font-bold text-ink-primary">
-          {info.customer_name}님
-        </div>
-      )}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-secondary">
-        {info.date && (
-          <span className="inline-flex items-center gap-1">
-            <span className="text-ink-tertiary">📅</span>
-            <span className="font-semibold text-ink-primary">{formatNiceDate(info.date)}</span>
-          </span>
-        )}
-        {info.time && (
-          <span className="inline-flex items-center gap-1">
-            <span className="text-ink-tertiary">🕐</span>
-            <span className="font-semibold text-ink-primary">{info.time}</span>
-          </span>
-        )}
-        {info.party_size && (
-          <span className="inline-flex items-center gap-1">
-            <span className="text-ink-tertiary">👥</span>
-            <span className="font-semibold text-ink-primary">{info.party_size}명</span>
-          </span>
-        )}
-      </div>
-      {info.special_notes && (
-        <div className="text-[12px] text-ink-tertiary mt-1">
-          💬 {info.special_notes}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── 취소 ───
-function CancelBody({ info }) {
-  return (
-    <div className="space-y-1.5">
-      {info.customer_name && (
-        <div className="text-[15px] font-bold text-ink-primary">
-          {info.customer_name}님
-        </div>
-      )}
-      {info.date && (
-        <div className="text-[13px] text-ink-secondary">
-          📅 <span className="font-semibold text-ink-primary">{formatNiceDate(info.date)}</span> 예약 취소
-        </div>
-      )}
-      {info.special_notes && (
-        <div className="text-[12px] text-ink-tertiary">
-          💬 {info.special_notes}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── 불만 (메인 강조: 빨간 박스로 special_notes 부각) ───
-function ComplaintBody({ info, call }) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-baseline gap-2 flex-wrap">
-        {info.customer_name && (
-          <span className="text-[15px] font-bold text-ink-primary">
-            {info.customer_name}님
-          </span>
-        )}
-        {info.menu && info.menu.length > 0 && (
-          <span className="text-[12px] text-ink-tertiary">
-            🍜 {info.menu.join(', ')}
-          </span>
-        )}
-      </div>
-      <div className="bg-red-50 border border-red-100 rounded-[8px] px-3 py-2 text-[13px] text-red-900 leading-snug">
-        {info.special_notes || call.summary || '불만 사항'}
-      </div>
-    </div>
-  );
-}
-
-// ─── 주문/단체 ───
-function OrderBody({ info }) {
-  return (
-    <div className="space-y-1.5">
-      {info.customer_name && (
-        <div className="text-[15px] font-bold text-ink-primary">
-          {info.customer_name}님
-        </div>
-      )}
-      {info.menu && info.menu.length > 0 && (
-        <div className="text-[13px] text-ink-secondary">
-          🍱 <span className="font-semibold text-ink-primary">{info.menu.join(', ')}</span>
-        </div>
-      )}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-secondary">
-        {info.date && (
-          <span className="inline-flex items-center gap-1">
-            <span className="text-ink-tertiary">📅</span>
-            <span className="font-semibold text-ink-primary">{formatNiceDate(info.date)}</span>
-          </span>
-        )}
-        {info.time && (
-          <span className="inline-flex items-center gap-1">
-            <span className="text-ink-tertiary">🕐</span>
-            <span className="font-semibold text-ink-primary">{info.time}</span>
-          </span>
-        )}
-        {info.party_size && (
-          <span className="inline-flex items-center gap-1">
-            <span className="text-ink-tertiary">👥</span>
-            <span className="font-semibold text-ink-primary">{info.party_size}명</span>
-          </span>
-        )}
-      </div>
-      {info.special_notes && (
-        <div className="text-[12px] text-ink-tertiary">
-          💬 {info.special_notes}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── 칭찬 ───
-function PositiveBody({ info }) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-baseline gap-2 flex-wrap">
-        {info.customer_name && (
-          <span className="text-[15px] font-bold text-ink-primary">
-            {info.customer_name}님
-          </span>
-        )}
-        {info.menu && info.menu.length > 0 && (
-          <span className="text-[12px] text-ink-tertiary">
-            🍜 {info.menu.join(', ')}
-          </span>
-        )}
-      </div>
-      <div className="text-[13px] text-ink-secondary leading-snug">
-        💜 {info.special_notes || '단골/칭찬 통화'}
-      </div>
-    </div>
-  );
-}
-
-// ─── 문의/가격/알레르기/기타 ───
-function InquiryBody({ info, call }) {
-  return (
-    <div className="text-[13px] text-ink-secondary leading-snug line-clamp-2">
-      💬 {info.special_notes || call.summary || '문의 통화'}
-    </div>
   );
 }
 
@@ -768,19 +550,19 @@ function MaskedCard({ call, onDelete, formatDate, formatDuration }) {
   return (
     <Link
       href={`/calls/${call.id}`}
-      className="block bg-white border border-line rounded-[14px] p-4 sm:p-5 cursor-pointer transition-all hover:border-brand-blue hover:translate-x-0.5"
+      className="block bg-white border border-line rounded-[14px] p-5 cursor-pointer transition-all hover:border-brand-blue"
     >
       <div className="flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-[10px] font-bold px-2 py-[3px] rounded-md bg-gray-100 text-gray-600">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-[10px] font-bold px-2 py-[3px] rounded-md bg-gray-100 text-gray-600 border border-gray-200">
               🔒 개인 통화
             </span>
             <span className="text-[11px] text-ink-tertiary tabular-nums">
               {formatDuration(call.duration)}
             </span>
           </div>
-          <div className="text-[14px] font-semibold text-ink-secondary mb-0.5">
+          <div className="text-[18px] font-bold text-ink-secondary mb-1 tabular-nums">
             {masked}
           </div>
           <div className="text-[12px] text-ink-tertiary">
@@ -803,7 +585,7 @@ function MaskedCard({ call, onDelete, formatDate, formatDuration }) {
 }
 
 // ──────────────────────────────────────────────────────
-// 날짜 포맷 (YYYY-MM-DD → "5/8(목)" 같은 친근한 형태)
+// 날짜 포맷 (YYYY-MM-DD → "오늘 5/8(목)" 같은 친근한 형태)
 // ──────────────────────────────────────────────────────
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 function formatNiceDate(dateStr) {
