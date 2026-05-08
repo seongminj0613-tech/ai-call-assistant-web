@@ -149,19 +149,29 @@ export default function DashboardPage() {
       const fileFormat = ext.replace('.', '') || 'm4a';
       const storeId = stores[0].id;
 
+      // MIME 타입 결정 (브라우저 감지값 우선, 없으면 확장자 기반 fallback)
+      const MIME_BY_EXT = {
+        m4a: 'audio/mp4',
+        mp4: 'audio/mp4',
+        mp3: 'audio/mpeg',
+        wav: 'audio/wav',
+        ogg: 'audio/ogg',
+      };
+      const mimeType = file.type || MIME_BY_EXT[fileFormat] || 'audio/mp4';
+
       setUploadProgress(10);
       const uploadRes = await callApi.requestUpload({
         storeId,
         fileName: file.name,
         fileFormat,
+        mimeType,
       });
       const { call_id, upload_url } = uploadRes.data;
 
       setUploadProgress(30);
-      const contentType = `audio/${fileFormat}`;
       const uploadResponse = await fetch(upload_url, {
         method: 'PUT',
-        headers: { 'Content-Type': contentType },
+        headers: { 'Content-Type': mimeType },  // Lambda가 서명한 것과 100% 동일
         body: file,
       });
 
