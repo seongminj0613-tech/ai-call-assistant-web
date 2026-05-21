@@ -162,9 +162,9 @@ const { data } = await api.get(`/calls/${callId}/audio`);
 
 ## 🎨 데이터 동기화 전략
 
-**Phase 1 (현재)**: 페이지 진입 시 axios로 최신 데이터 1회 로드. 처리 중 통화는 새로고침/재방문 시 갱신.
+**Phase 1 (현재)**: 페이지 진입 시 axios로 최신 데이터 1회 로드. 처리 중 통화는 새로고침/재방문 시 갱신.백엔드 Lambda 5분 주기 폴링으로 STT 실패 자동 복구 처리 중
 
-**Phase 2 (계획)**: 실시간 동기화 (폴링 또는 WebSocket).
+**Phase 2 (계획)**: 웹 클라이언트 실시간 동기화 (WebSocket)
 
 ---
 
