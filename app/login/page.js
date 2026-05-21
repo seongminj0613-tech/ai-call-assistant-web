@@ -37,13 +37,21 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      console.log('1️⃣ 카카오 로그인 시작...');
       const kakaoAccessToken = await loginWithKakao();
       console.log('✅ 카카오 access_token 받음');
 
+      // 카카오 사용자 정보 프론트에서 직접 조회
+      const kakaoUserResp = await fetch('https://kapi.kakao.com/v2/user/me', {
+          headers: { Authorization: `Bearer ${kakaoAccessToken}` },
+      });
+      const kakaoUser = await kakaoUserResp.json();
+      const kakaoId  = String(kakaoUser.id);
+      const email    = kakaoUser.kakao_account?.email || '';
+      const nickname = kakaoUser.kakao_account?.profile?.nickname || '';
+      
       console.log('2️⃣ 백엔드에 인증 요청...');
-      const response = await authApi.kakaoLogin(kakaoAccessToken);
-      const { custom_token, uid, nickname } = response.data;
+      const response = await authApi.kakaoLogin(kakaoId, email, nickname);
+      const { custom_token, uid } = response.data;
       console.log('✅ Firebase Custom Token 받음:', { uid, nickname });
 
       console.log('3️⃣ Firebase 로그인 중...');
