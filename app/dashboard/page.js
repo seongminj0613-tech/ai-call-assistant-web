@@ -70,10 +70,14 @@ export default function DashboardPage() {
         const savedNickname = localStorage.getItem('user_nickname') || '사장님';
         setNickname(savedNickname);
         await loadData();
+        setAuthLoading(false);
       } else {
-        router.push('/login');
+        // 약간 딜레이 줘서 Firebase 초기화 기다리기
+        setTimeout(() => {
+          setAuthLoading(false);
+          router.push('/login');
+        }, 1500);
       }
-      setAuthLoading(false);
     });
     return () => unsubscribe();
   }, [router]);
