@@ -3,7 +3,7 @@
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/api';
-import { loginWithFirebaseCustomToken } from '@/lib/firebase';
+import { loginWithFirebaseCustomToken, auth } from '@/lib/firebase';
 
 function KakaoCallback() {
   const router = useRouter();
@@ -50,7 +50,15 @@ function KakaoCallback() {
 
       if (nickname) localStorage.setItem('user_nickname', nickname);
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+          if (user) {
+            unsubscribe();
+            resolve();
+          }
+        });
+        setTimeout(resolve, 5000);
+      });
 
       router.push('/dashboard');
     } catch (err) {
