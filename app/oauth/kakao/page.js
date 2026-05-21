@@ -50,6 +50,8 @@ function KakaoCallback() {
 
       if (nickname) localStorage.setItem('user_nickname', nickname);
 
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       router.push('/dashboard');
     } catch (err) {
       console.error('카카오 콜백 처리 실패:', err);
