@@ -182,6 +182,14 @@ export default function CallDetailPage() {
     try { return JSON.parse(keywords); } catch { return []; }
   };
 
+  const parseInternalKeywords = (keywords) => {
+    if (!keywords) return {};
+    if (typeof keywords === 'object' && !Array.isArray(keywords)) return keywords;
+    try { return JSON.parse(keywords); } catch { return {}; }
+  };
+
+
+
   const sttLines = useMemo(() => {
     if (!call?.stt_result) return [];
     return call.stt_result.split('\n').map((line, idx) => {
@@ -419,19 +427,35 @@ export default function CallDetailPage() {
               <div className="bg-brand-blue-light rounded-[12px] px-4 py-3.5 text-[14px] text-ink-primary leading-[1.65]">
                 {call.summary}
               </div>
-              {keywords.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {keywords.slice(0, 6).map((kw, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-brand-blue-light text-brand-blue-dark text-[12px] font-semibold px-3 py-1.5 rounded-full"
-                    >
-                      {kw}
-                    </span>
-                  ))}
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                 {/* 도메인 뱃지 */}
+                 {call.domain && call.domain !== '기타' && (
+                  <span className="bg-purple-100 text-purple-700 text-[12px] font-semibold px-3 py-1.5 rounded-full">
+                    🏷️ {call.domain}
+                  </span>
+                )}
+                
+                {/* 업종별 맞춤 키워드 */}
+                {Object.entries(parseInternalKeywords(call.internal_keywords)).map(([key, value]) => (
+                  value && (
+                   <div key={key} className="flex items-center gap-1.5 bg-surface-muted rounded-full px-3 py-1.5">
+                     <span className="text-[11px] text-ink-tertiary">{key}</span>
+                     <span className="text-[12px] font-semibold text-ink-primary">{value}</span>
+                   </div>
+                 )
+               ))}
+              </div>
+              
+              {/* SMS 추천 알림 */}
+              {call.sms_recommended === 1 && (
+                <div className="w-full mt-3 bg-green-50 border border-green-200 rounded-[10px] px-3 py-2.5 flex items-center justify-between">
+                  <span className="text-[12px] text-green-700">💬 문자 발송을 추천해요</span>
+                  <button className="text-[12px] font-semibold text-green-700 hover:text-green-900">
+                    문자 보내기 →
+                  </button>
                 </div>
               )}
-            </div>
+              </div>
           </section>
         )}
 
