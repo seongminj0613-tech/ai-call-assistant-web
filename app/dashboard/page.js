@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { logout, watchAuthState } from '@/lib/firebase';
 import { storeApi, callApi, calendarApi } from '@/lib/api';
-<<<<<<< Updated upstream
-=======
 import { startCalendarConnect } from '@/lib/calendarOAuth';
->>>>>>> Stashed changes
 import Logo from '../../app/components/Logo';
 
 const CALENDAR_PROVIDERS = [
@@ -72,12 +69,6 @@ function formatMenu(menu) {
   return String(menu);
 }
 
-const CALENDAR_PROVIDERS = {
-  google: { label: 'Google', shortLabel: 'Google' },
-  kakao: { label: '카카오', shortLabel: 'Kakao' },
-  naver: { label: '네이버', shortLabel: 'Naver' },
-};
-
 export default function DashboardPage() {
   const router = useRouter();
   const fileInputRef = useRef(null);
@@ -87,17 +78,8 @@ export default function DashboardPage() {
   const [nickname, setNickname] = useState('사장님');
   const [stores, setStores] = useState([]);
   const [calls, setCalls] = useState([]);
-<<<<<<< Updated upstream
-  const [dataLoading, setDataLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [calendarConnections, setCalendarConnections] = useState([]);
-  const [calendarBusy, setCalendarBusy] = useState(false);
-
-=======
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(false);
->>>>>>> Stashed changes
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -129,24 +111,14 @@ export default function DashboardPage() {
     setLoading(true);
     setError('');
     try {
-<<<<<<< Updated upstream
-      const [storesRes, callsRes, calendarRes] = await Promise.all([
-=======
       const [storesRes, callsRes, calRes] = await Promise.all([
->>>>>>> Stashed changes
         storeApi.list(),
         callApi.list({ limit: 200 }),
         calendarApi.listConnections().catch(() => ({ data: { connections: [] } })),
       ]);
-<<<<<<< Updated upstream
-      setStores(storesRes.data.stores || []);
-      setCalls(callsRes.data.calls || []);
-      setCalendarConnections(calendarRes.data.connections || []);
-=======
       setStores(storesRes.data?.stores || []);
       setCalls(callsRes.data?.calls || []);
       setConnections(calRes.data?.connections || []);
->>>>>>> Stashed changes
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || err.response?.data?.message || err.message || '데이터를 불러오지 못했습니다.');
@@ -210,87 +182,7 @@ export default function DashboardPage() {
     }
   }
 
-<<<<<<< Updated upstream
-
-  const buildCalendarState = (provider) => {
-    const randomPart = typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    return `calendar:${provider}:${randomPart}`;
-  };
-
-  const handleCalendarConnect = async (provider) => {
-    setCalendarBusy(true);
-    setError('');
-    try {
-      const redirectUri = `${window.location.origin}/oauth/${provider}`;
-      const state = buildCalendarState(provider);
-      localStorage.setItem(`calendar_oauth_state_${provider}`, state);
-      const res = await calendarApi.getAuthorizeUrl(provider, redirectUri, state);
-      window.location.href = res.data.authorize_url;
-    } catch (err) {
-      console.error('캘린더 연결 URL 생성 실패:', err);
-      setError(err.response?.data?.error || '캘린더 연결을 시작하지 못했습니다');
-      setCalendarBusy(false);
-    }
-  };
-
-  const handleCalendarDisconnect = async (provider) => {
-    if (!confirm(`${CALENDAR_PROVIDERS[provider]?.label || provider} 연결을 해제할까요?`)) return;
-    setCalendarBusy(true);
-    setError('');
-    try {
-      await calendarApi.disconnect(provider);
-      await loadData();
-      setSuccessMsg('캘린더 연결을 해제했습니다');
-    } catch (err) {
-      console.error('캘린더 연결 해제 실패:', err);
-      setError(err.response?.data?.error || '캘린더 연결 해제에 실패했습니다');
-    } finally {
-      setCalendarBusy(false);
-    }
-  };
-
-  const handleCalendarDefault = async (provider) => {
-    setCalendarBusy(true);
-    setError('');
-    try {
-      await calendarApi.setDefault(provider);
-      await loadData();
-      setSuccessMsg(`${CALENDAR_PROVIDERS[provider]?.label || provider}을 기본 캘린더로 설정했습니다`);
-    } catch (err) {
-      console.error('기본 캘린더 설정 실패:', err);
-      setError(err.response?.data?.error || '기본 캘린더 설정에 실패했습니다');
-    } finally {
-      setCalendarBusy(false);
-    }
-  };
-
-  const handleCalendarCreate = async (callId, provider, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCalendarBusy(true);
-    setError('');
-    setSuccessMsg('');
-    try {
-      const payload = provider ? { provider } : {};
-      const res = await calendarApi.createEventForCall(callId, payload);
-      const label = CALENDAR_PROVIDERS[res.data.provider || provider]?.label || '캘린더';
-      setSuccessMsg(res.data.already_created ? `${label}에 이미 등록된 예약입니다` : `${label}에 예약을 등록했습니다`);
-    } catch (err) {
-      console.error('캘린더 등록 실패:', err);
-      const status = err.response?.status;
-      const message = err.response?.data?.error || '캘린더 등록에 실패했습니다';
-      setError(status === 409 ? '먼저 캘린더를 연동해야 합니다' : message);
-    } finally {
-      setCalendarBusy(false);
-    }
-  };
-
-  const handleFileSelect = async (e) => {
-=======
   async function handleFileSelect(e) {
->>>>>>> Stashed changes
     const file = e.target.files?.[0];
     if (!file) return;
     if (!stores.length) {
@@ -404,123 +296,11 @@ export default function DashboardPage() {
           </div>
         </section>
 
-<<<<<<< Updated upstream
-
-        {/* ───────── 캘린더 연동 ───────── */}
-        <section className="bg-white border border-line rounded-[14px] p-4 sm:p-5 mb-4 animate-fade-up anim-delay-150">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-              <h2 className="text-[14px] font-bold text-ink-primary">캘린더 연동</h2>
-              <p className="text-[12px] text-ink-tertiary mt-0.5">예약 카드의 날짜와 시간을 연결된 캘린더에 바로 등록합니다.</p>
-            </div>
-            <button
-              onClick={loadData}
-              disabled={dataLoading || calendarBusy}
-              className="text-[12px] text-ink-tertiary hover:text-ink-secondary disabled:opacity-50"
-            >
-              새로고침
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {Object.entries(CALENDAR_PROVIDERS).map(([provider, meta]) => {
-              const connection = calendarConnections.find((item) => item.provider === provider);
-              return (
-                <div key={provider} className="border border-line rounded-[12px] p-3 flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[13px] font-semibold text-ink-primary">{meta.label}</span>
-                    {connection ? (
-                      <span className="text-[10px] font-bold px-2 py-[2px] rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                        {connection.is_default ? '기본' : '연동됨'}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold px-2 py-[2px] rounded-full bg-gray-50 text-gray-500 border border-gray-100">미연동</span>
-                    )}
-                  </div>
-                  {connection ? (
-                    <div className="flex gap-1.5">
-                      {!connection.is_default && (
-                        <button
-                          onClick={() => handleCalendarDefault(provider)}
-                          disabled={calendarBusy}
-                          className="flex-1 text-[11px] font-semibold px-2 py-2 rounded-[8px] bg-surface-page text-ink-secondary hover:bg-brand-blue-light hover:text-brand-blue disabled:opacity-50"
-                        >
-                          기본 설정
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleCalendarDisconnect(provider)}
-                        disabled={calendarBusy}
-                        className="flex-1 text-[11px] font-semibold px-2 py-2 rounded-[8px] bg-surface-page text-ink-secondary hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                      >
-                        해제
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleCalendarConnect(provider)}
-                      disabled={calendarBusy}
-                      className="text-[11px] font-semibold px-2 py-2 rounded-[8px] bg-brand-blue text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      OAuth 연결
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ───────── 업로드 영역 ───────── */}
-        <div className="mb-4 animate-fade-up anim-delay-200">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/*,.m4a,.mp3,.wav"
-            onChange={handleFileSelect}
-            disabled={uploading}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading || stores.length === 0}
-            className="w-full bg-white border-2 border-dashed border-line rounded-[14px] p-4 sm:p-5 flex items-center gap-3 text-left transition-all hover:border-brand-blue hover:bg-brand-blue-light disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="flex-none w-11 h-11 bg-brand-blue-light text-brand-blue rounded-[12px] flex items-center justify-center">
-              {uploading ? (
-                <span className="text-xl">⏳</span>
-              ) : (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              {uploading ? (
-                <>
-                  <div className="text-[14px] font-semibold text-ink-primary mb-1">업로드 중... {uploadProgress}%</div>
-                  <div className="w-full bg-surface-muted rounded-full h-1.5">
-                    <div
-                      className="bg-brand-blue h-1.5 rounded-full transition-all"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-[14px] font-semibold text-ink-primary mb-0.5">통화 녹음 파일 업로드</div>
-                  <div className="text-[12px] text-ink-tertiary">m4a, mp3, wav (최대 50MB)</div>
-                </>
-              )}
-            </div>
-=======
         <section className="bg-white border border-line rounded-[16px] p-5 mb-5">
           <input ref={fileInputRef} type="file" accept="audio/*,.m4a,.mp3,.wav,.ogg,.mp4" onChange={handleFileSelect} disabled={uploading} className="hidden" />
           <button onClick={() => fileInputRef.current?.click()} disabled={uploading || !stores.length} className="w-full border-2 border-dashed border-line rounded-[12px] p-5 text-left hover:border-brand-blue disabled:opacity-50">
             <div className="font-bold text-ink-primary">{uploading ? '업로드 중...' : '통화 녹음 파일 업로드'}</div>
             <div className="text-[13px] text-ink-tertiary">m4a, mp3, wav, ogg, mp4</div>
->>>>>>> Stashed changes
           </button>
         </section>
 
@@ -531,29 +311,10 @@ export default function DashboardPage() {
           {loading && !calls.length ? (
             <div className="text-center py-12 text-sm text-ink-tertiary">불러오는 중...</div>
           ) : calls.length === 0 ? (
-<<<<<<< Updated upstream
-            <EmptyState />
-          ) : (
-            <div className="flex flex-col gap-3">
-              {calls.map((call) => (
-                <CallCard
-                  key={call.id}
-                  call={call}
-                  store={storeMap[call.store_id]}
-                  onDelete={handleDelete}
-                  onCalendarCreate={handleCalendarCreate}
-                  calendarConnections={calendarConnections}
-                  calendarBusy={calendarBusy}
-                  formatDate={formatDate}
-                  formatDuration={formatDuration}
-                />
-              ))}
-=======
             <div className="text-center py-16 px-5 bg-white rounded-[14px] border border-dashed border-line">
               <div className="text-3xl mb-3">📭</div>
               <h3 className="text-[16px] font-bold text-ink-primary mb-1">아직 통화가 없어요</h3>
               <p className="text-[13px] text-ink-secondary">녹음 파일을 업로드하거나 앱에서 자동 동기화를 시작하세요.</p>
->>>>>>> Stashed changes
             </div>
           ) : calls.map((call) => (
             <CallCard
@@ -580,45 +341,12 @@ function StatCard({ label, value }) {
   );
 }
 
-<<<<<<< Updated upstream
-// ══════════════════════════════════════════════════════
-// 🆕 통화 카드 (라벨식 정돈된 레이아웃)
-// ══════════════════════════════════════════════════════
-function CallCard({ call, store, onDelete, onCalendarCreate, calendarConnections, calendarBusy, formatDate, formatDuration }) {
-  // extracted_info 파싱
-  let info = call.extracted_info;
-  if (typeof info === 'string') {
-    try { info = JSON.parse(info); } catch { info = null; }
-  }
-
-  const categoryCode =
-    info?.category_code ||
-    KO_CATEGORY_MAP[call.category] ||
-    'other';
-
-  const catInfo = CATEGORY_INFO[categoryCode] || CATEGORY_INFO.other;
-  const badgeStyle = COLOR_STYLES[catInfo.color];
-
-  const phone = call.caller_number || '발신번호 없음';
-  const defaultConnection = calendarConnections.find((item) => item.is_default) || calendarConnections[0];
-  const canCreateCalendarEvent = categoryCode === 'reservation' && info?.date && info?.time;
-
-// 라벨식 정보 행 만들기 (값 있는 것만)
-const rows = [];
-if (info?.customer_name) rows.push(['👤 성명', info.customer_name]);
-if (info?.date)          rows.push(['📅 날짜', formatNiceDate(info.date)]);
-if (info?.time)          rows.push(['🕐 시간', info.time]);
-if (info?.party_size)    rows.push(['👥 인원', `${info.party_size}명`]);
-if (info?.menu && info.menu.length > 0) rows.push(['🍽️ 메뉴', info.menu.join(', ')]);
-if (info?.special_notes) rows.push(['⚠️ 특이사항', info.special_notes]);
-=======
 function CallCard({ call, connections, defaultProvider, onCreateCalendarEvent, onDelete }) {
   const info = parseInfo(call);
   const category = info.category_code || call.category || 'other';
   const label = CATEGORY_LABELS[category] || CATEGORY_LABELS.other;
   const reservation = isReservation(call);
   const menuText = formatMenu(info.menu || info.items);
->>>>>>> Stashed changes
 
   return (
     <article className="bg-white border border-line rounded-[14px] p-5 hover:shadow-[0_4px_12px_rgba(59,130,246,0.08)] transition-all">
@@ -645,46 +373,6 @@ function CallCard({ call, connections, defaultProvider, onCreateCalendarEvent, o
         {info.special_notes && <Info label="특이사항" value={info.special_notes} />}
       </div>
 
-<<<<<<< Updated upstream
-      {/* ─── 라벨-값 정보 리스트 ─── */}
-      {rows.length > 0 && (
-        <div className="space-y-1.5 mb-4">
-          {rows.map(([label, value]) => (
-            <div key={label} className="flex items-start gap-3 text-[13px]">
-              <span className="flex-none w-20 text-ink-tertiary">{label}</span>
-              <span className="flex-1 text-ink-primary font-medium">{value}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-
-
-      {canCreateCalendarEvent && (
-        <div className="mb-4 flex items-center gap-2">
-          <button
-            onClick={(e) => onCalendarCreate(call.id, defaultConnection?.provider, e)}
-            disabled={calendarBusy || !defaultConnection}
-            className="inline-flex items-center justify-center gap-1.5 text-[12px] font-bold px-3 py-2 rounded-[9px] bg-brand-blue text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            title={defaultConnection ? `${CALENDAR_PROVIDERS[defaultConnection.provider]?.label || defaultConnection.provider} 캘린더에 등록` : '먼저 캘린더를 연동하세요'}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-              <line x1="12" y1="14" x2="12" y2="18"/>
-              <line x1="10" y1="16" x2="14" y2="16"/>
-            </svg>
-            {defaultConnection ? `${CALENDAR_PROVIDERS[defaultConnection.provider]?.shortLabel || defaultConnection.provider} 등록` : '캘린더 연동 필요'}
-          </button>
-          <span className="text-[11px] text-ink-tertiary">{formatNiceDate(info.date)} {info.time}</span>
-        </div>
-      )}
-
-      {/* ─── 초록색 AI 요약 박스 ─── */}
-=======
->>>>>>> Stashed changes
       {call.summary && (
         <div className="bg-emerald-50 border border-emerald-100 rounded-[10px] px-3.5 py-3 mb-3">
           <div className="text-[11px] font-bold text-emerald-700 mb-1">AI 요약</div>
