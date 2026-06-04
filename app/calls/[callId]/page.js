@@ -190,24 +190,33 @@ export default function CallDetailPage() {
 
 
 
-  const sttLines = useMemo(() => {
-    if (!call?.stt_result) return [];
-    return call.stt_result.split('\n').map((line, idx) => {
+const sttLines = useMemo(() => {
+  if (!call?.stt_result) return [];
+  const lines = call.stt_result.split('\n').filter(l => l.trim());
+  const hasMarkers = lines.some(l => /^\[화자([^\]]+)\]:/.test(l));
+
+  if (hasMarkers) {
+    return lines.map((line, idx) => {
       const match = line.match(/^\[화자([^\]]+)\]:\s*(.*)$/);
       if (match) {
-        const speaker = match[1];
-        const text = match[2];
-        return {
-          idx,
-          speaker,
-          isCustomer: speaker === '1',
-          text,
-          isMatch: true,
-        };
+        return { idx, speaker: match[1], isCustomer: match[1] === '1', text: match[2], isMatch: true };
       }
       return { idx, text: line, isMatch: false };
-    }).filter(x => x.text.trim());
-  }, [call?.stt_result]);
+    });
+  }
+
+  // 화자 구분 없는 경우 → 문장 단위로 분리해서 손님 버블로 표시
+  const sentences = call.stt_result
+    .split(/(?<=[.?!])\s+/)
+    .filter(s => s.trim());
+
+  return sentences.map((text, idx) => ({
+    idx,
+    isCustomer: true,
+    text: text.trim(),
+    isMatch: true,
+  }));
+}, [call?.stt_result]);
 
   const handleCopyTranscript = async () => {
     if (!call?.stt_result) return;
