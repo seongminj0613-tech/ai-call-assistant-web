@@ -508,7 +508,7 @@ const sttLines = useMemo(() => {
                       className={`flex flex-col mb-3.5 ${line.isCustomer ? 'items-start' : 'items-end'}`}
                     >
                       <div className={`text-[11px] text-ink-tertiary mb-1 font-mono ${line.isCustomer ? '' : 'text-right'}`}>
-                        {line.isCustomer ? '👤 손님' : '🏪 사장님'}
+                        {line.isCustomer ? '📞 발신자' : '📱 수신자'}
                       </div>
                       <div
                         className={`max-w-[85%] px-3.5 py-2.5 text-[13px] leading-[1.55] rounded-[12px] border ${
