@@ -25,8 +25,12 @@ function KakaoCallback() {
   }, []);
 
   // 캘린더 연결
-  async function handleCalendarCallback(code, state) {
+async function handleCalendarCallback(code, state) {
     try {
+      // 만료된 캐시 토큰 제거 후 새로 발급
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('firebase_id_token');
+      }
       const headers = await getAuthHeaders();
       const res = await fetch(`${getApiBase()}/calendar/connections/oauth-code`, {
         method: 'POST',
