@@ -136,14 +136,26 @@ export default function DashboardPage() {
   const sectionTitleStyle={fontWeight:700,fontSize:14,color:'#1F2A3D'};
   const linkStyle={fontSize:12,color:AccentBlue,textDecoration:'none'};
 
-  // 업로드 버튼 (헤더 우측)
+  // 업로드 버튼 (헤더 우측) — label 방식으로 맥 Safari 호환
   const uploadAction = (
     <>
-      <input ref={fileInputRef} type="file" accept="audio/*,.m4a,.mp3,.wav" onChange={handleFileSelect} disabled={uploading} style={{display:'none'}}/>
-      <button onClick={()=>fileInputRef.current?.click()} disabled={uploading||stores.length===0}
-        style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.15)', border:'none', borderRadius:8, padding:'6px 12px', color:'white', cursor:'pointer', fontSize:12, fontWeight:600 }}>
+      <input
+        ref={fileInputRef}
+        id="dashboard-file-upload"
+        type="file"
+        accept="audio/*,.m4a,.mp3,.wav"
+        onChange={handleFileSelect}
+        disabled={uploading || stores.length === 0}
+        style={{ position:'absolute', width:1, height:1, opacity:0, overflow:'hidden', clip:'rect(0,0,0,0)', whiteSpace:'nowrap' }}
+      />
+      <label htmlFor="dashboard-file-upload" style={{
+        display:'flex', alignItems:'center', gap:6,
+        background:'rgba(255,255,255,0.15)', borderRadius:8, padding:'6px 12px',
+        color:'white', cursor: uploading || stores.length === 0 ? 'not-allowed' : 'pointer',
+        fontSize:12, fontWeight:600, opacity: uploading || stores.length === 0 ? 0.6 : 1,
+      }}>
         {uploading ? `⏳ ${uploadProgress}%` : `📤 업로드`}
-      </button>
+      </label>
     </>
   );
 
@@ -157,10 +169,13 @@ export default function DashboardPage() {
             통화 분석 대기 <span style={{ color:'#6FA8F0' }}>{pendingCount}건</span>
           </p>
         </div>
-        <button onClick={()=>fileInputRef.current?.click()} disabled={uploading||stores.length===0}
-          style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:10, padding:'10px 14px', color:White, cursor:'pointer', fontSize:20 }}>
+        <label htmlFor="dashboard-file-upload" style={{
+          background:'rgba(255,255,255,0.15)', borderRadius:10, padding:'10px 14px',
+          color:White, cursor: uploading||stores.length===0 ? 'not-allowed' : 'pointer',
+          fontSize:20, opacity: uploading||stores.length===0 ? 0.6 : 1,
+        }}>
           🔄
-        </button>
+        </label>
       </div>
 
       {/* 상단 2단 그리드 */}
