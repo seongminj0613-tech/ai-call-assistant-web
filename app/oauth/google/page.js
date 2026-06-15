@@ -24,37 +24,27 @@ function GoogleCallback() {
     if (isCalendar) {
       handleCalendarCallback(code, state);
     } else {
-      handleLoginCallback(code);
+      handleLoginCallback(code, state);
     }
   }, []);
 
-  async function handleLoginCallback(code) {
+  async function handleLoginCallback(code, state) {
     try {
       setMsg('구글 로그인 처리 중...');
 
-      // 1) code → token (구글 토큰 엔드포인트)
-      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-          redirect_uri: `${window.location.origin}/oauth/google`,
-          code,
-        }),
-      });
-      const tokenData = await tokenRes.json();
-      if (!tokenData.id_token && !tokenData.access_token) {
-        throw new Error('구글 토큰 발급 실패: ' + JSON.stringify(tokenData));
-      }
-
-      // 2) 백엔드 /auth/google 에 id_token 전달
+      // 네이버와 동일하게 code + redirect_uri를 백엔드에 전달
+      // 백엔드가 토큰 교환 담당
       const apiBase = getApiBase();
       const res = await fetch(`${apiBase}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider_access_token: tokenData.id_token || tokenData.access_token }),
+        body: JSON.stringify({
+          code,
+          state,
+          redirect_uri: `${window.location.origin}/oauth/google`,
+        }),
       });
+
       if (!res.ok) {
         const errText = await res.text();
         throw new Error(`백엔드 오류 ${res.status}: ${errText}`);
@@ -63,14 +53,14 @@ function GoogleCallback() {
       const customToken = data.custom_token || data.customToken;
       if (!customToken) throw new Error('Custom token 없음');
 
-      // 3) Firebase 로그인
+      // Firebase 로그인
       await loginWithFirebaseCustomToken(customToken);
 
-      // 4) 닉네임 저장
-      const nickname = data.user?.nickname || data.name || data.nickname || '사장님';
+      // 닉네임 저장
+      const nickname = data.user?.nickname || data.nickname || data.name || '사장님';
       localStorage.setItem('user_nickname', nickname);
 
-      // 5) Firebase 완료 대기
+      // Firebase 완료 대기
       await new Promise((resolve) => {
         const unsub = auth.onAuthStateChanged((user) => {
           if (user) { unsub(); resolve(); }
