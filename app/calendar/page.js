@@ -1,157 +1,225 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { watchAuthState } from '@/lib/firebase';
 import { calendarConnectApi } from '@/lib/api';
-import AppLayout from '../components/AppLayout';
+import AppLayout from '../../components/AppLayout';
 
-const DarkNavy='#3D4D6B', AccentBlue='#3B7DD8', White='#FFFFFF';
-const WEEKDAYS=['일','월','화','수','목','금','토'];
+const PROVIDERS = [
+  {
+    key: 'google',
+    label: 'Google 캘린더',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+    ),
+    color: 'border-[#4285F4]/30 hover:border-[#4285F4]/60',
+    activeColor: 'border-[#4285F4] bg-blue-50',
+    badgeColor: 'bg-blue-100 text-blue-700',
+  },
+  {
+    key: 'kakao',
+    label: '카카오 캘린더',
+    icon: <span className="text-[18px]">💬</span>,
+    color: 'border-[#FEE500]/60 hover:border-[#FEE500]',
+    activeColor: 'border-[#FEE500] bg-yellow-50',
+    badgeColor: 'bg-yellow-100 text-yellow-800',
+  },
+  {
+    key: 'naver',
+    label: '네이버 캘린더',
+    icon: <span className="text-[18px] font-bold text-[#03C75A]">N</span>,
+    color: 'border-[#03C75A]/30 hover:border-[#03C75A]/60',
+    activeColor: 'border-[#03C75A] bg-green-50',
+    badgeColor: 'bg-green-100 text-green-700',
+  },
+];
 
-export default function CalendarPage() {
+export default function CalendarConnectPage() {
   const router = useRouter();
-  const now = new Date();
-  const [events, setEvents] = useState([]);
+  const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
-  const [selectedDay, setSelectedDay] = useState(now.getDate());
+  const [actionLoading, setActionLoading] = useState('');
+  const [error, setError] = useState('');
 
-  useEffect(()=>{
-    const unsub=watchAuthState(async(user)=>{
-      if(!user){setTimeout(()=>router.push('/login'),5000);return;}
-      await loadEvents(year,month);
+  useEffect(() => {
+    const unsub = watchAuthState(async (user) => {
+      if (!user) { setTimeout(() => router.push('/login'), 5000); return; }
+      await loadConnections();
     });
-    return()=>unsub();
-  },[router]);
+    return () => unsub();
+  }, [router]);
 
-  useEffect(()=>{ loadEvents(year,month); },[year,month]);
-
-  const loadEvents = async(y,m)=>{
+  const loadConnections = async () => {
     setLoading(true);
-    try{
-      const from=`${y}-${String(m+1).padStart(2,'0')}-01`;
-      const last=new Date(y,m+1,0).getDate();
-      const to=`${y}-${String(m+1).padStart(2,'0')}-${last}`;
-      const res=await calendarConnectApi.getEvents(from,to).catch(()=>({data:{events:[]}}));
-      setEvents(res.data?.events||[]);
-    }catch(e){console.error(e);}
-    finally{setLoading(false);}
+    try {
+      const res = await calendarConnectApi.getConnections();
+      setConnections(res.data?.connections || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const firstDay=new Date(year,month,1).getDay();
-  const lastDate=new Date(year,month+1,0).getDate();
+  const connectedProviders = new Set(connections.map(c => c.provider));
 
-  const eventsByDay=useMemo(()=>{
-    const m={};
-    events.forEach(ev=>{
-      const d=ev.day_of_month||(ev.start_datetime?new Date(ev.start_datetime).getDate():null);
-      if(d){if(!m[d])m[d]=[];m[d].push(ev);}
-    });
-    return m;
-  },[events]);
+  const handleConnect = async (provider) => {
+    setActionLoading(provider);
+    setError('');
+    try {
+      const redirectUri = `${window.location.origin}/oauth/${provider}`;
+      const state = Math.random().toString(36).slice(2);
 
-  const selectedEvents = eventsByDay[selectedDay]||[];
+      // Firebase 토큰을 state에 포함 (캘린더 연동 콜백에서 인증용)
+      const token = localStorage.getItem('firebase_id_token');
+      const stateObj = btoa(JSON.stringify({ firebase_token: token, state }));
 
-  const prevMonth=()=>{if(month===0){setYear(y=>y-1);setMonth(11);}else setMonth(m=>m-1);};
-  const nextMonth=()=>{if(month===11){setYear(y=>y+1);setMonth(0);}else setMonth(m=>m+1);};
+      let url = '';
+      if (provider === 'google') {
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        if (!clientId) { setError('Google Client ID가 없습니다'); return; }
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'code',
+          scope: 'https://www.googleapis.com/auth/calendar',
+          state: stateObj,
+          access_type: 'offline',
+          prompt: 'consent',
+        });
+        url = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+      } else if (provider === 'kakao') {
+        const clientId = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY || 'a05635006ea378df6a0a4ba7de8aed61';
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'code',
+          scope: 'talk_calendar',
+          state: stateObj,
+        });
+        url = `https://kauth.kakao.com/oauth/authorize?${params}`;
+      } else if (provider === 'naver') {
+        const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
+        if (!clientId) { setError('Naver Client ID가 없습니다'); return; }
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'code',
+          state: stateObj,
+          scope: 'calendar',
+        });
+        url = `https://nid.naver.com/oauth2.0/authorize?${params}`;
+      }
 
-  const formatTime=(ev)=>{
-    if(ev.time) return ev.time;
-    if(ev.start_datetime) return new Date(ev.start_datetime).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
-    return '';
+      if (url) window.location.href = url;
+      else setError('지원하지 않는 제공자입니다');
+    } catch (e) {
+      setError(`${provider} 연동 시작에 실패했습니다`);
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const handleDisconnect = async (provider) => {
+    if (!confirm(`${provider} 캘린더 연동을 해제할까요?`)) return;
+    setActionLoading(provider);
+    try {
+      await calendarConnectApi.disconnect(provider);
+      setConnections(prev => prev.filter(c => c.provider !== provider));
+    } catch (e) {
+      setError(e.response?.data?.message || '연동 해제에 실패했습니다');
+    } finally {
+      setActionLoading('');
+    }
   };
 
   return (
-    <AppLayout title="일정 관리" rightAction={
-      <Link href="/calendar/connect" style={{ background:'rgba(255,255,255,0.15)', borderRadius:8, padding:'6px 10px', color:'white', fontSize:12, textDecoration:'none', fontWeight:600 }}>
-        캘린더 연동
-      </Link>
-    }>
-      {/* 캘린더 카드 */}
-      <div style={{ background:White, borderRadius:16, overflow:'hidden', marginBottom:16, boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
-        {/* 월 네비 */}
-        <div style={{ background:DarkNavy, padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <button onClick={prevMonth} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:20 }}>‹</button>
-          <span style={{ color:White, fontWeight:700, fontSize:16 }}>{year}년 {month+1}월</span>
-          <button onClick={nextMonth} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.7)', cursor:'pointer', fontSize:20 }}>›</button>
-        </div>
-
-        <div style={{ padding:'14px 16px' }}>
-          {/* 요일 */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', textAlign:'center', marginBottom:6 }}>
-            {WEEKDAYS.map((d,i)=>(
-              <div key={d} style={{ fontSize:11, fontWeight:600, color:i===0?'#E53E3E':i===6?AccentBlue:'#9AA5B5', padding:'4px 0' }}>{d}</div>
-            ))}
-          </div>
-          {/* 날짜 */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:3 }}>
-            {Array.from({length:firstDay}).map((_,i)=><div key={`e${i}`}/>)}
-            {Array.from({length:lastDate}).map((_,i)=>{
-              const day=i+1;
-              const isToday=year===now.getFullYear()&&month===now.getMonth()&&day===now.getDate();
-              const isSel=day===selectedDay;
-              const hasEv=eventsByDay[day]?.length>0;
-              const col=(firstDay+i)%7;
-              return (
-                <button key={day} onClick={()=>setSelectedDay(day)} style={{
-                  aspectRatio:'1', border:'none', cursor:'pointer', borderRadius:'50%',
-                  background:isToday?DarkNavy:isSel?'#EFF6FF':'transparent',
-                  color:isToday?White:col===0?'#E53E3E':col===6?AccentBlue:'#1F2A3D',
-                  fontWeight:isToday||isSel?700:400, fontSize:12,
-                  display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:1,
-                }}>
-                  {day}
-                  {hasEv&&<div style={{ width:4, height:4, borderRadius:'50%', background:isToday?'rgba(255,255,255,0.8)':AccentBlue }}/>}
-                </button>
-              );
-            })}
-          </div>
-          {/* 범례 */}
-          <div style={{ display:'flex', gap:14, marginTop:12, paddingTop:10, borderTop:'1px solid #F0F2F5' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#6B7889' }}>
-              <div style={{ width:7, height:7, borderRadius:'50%', background:AccentBlue }}/> 통화 자동등록
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#6B7889' }}>
-              <div style={{ width:7, height:7, borderRadius:'50%', background:'#3BA876' }}/> 수동 등록
-            </div>
-          </div>
-        </div>
+    <AppLayout>
+      <div className="mb-6 animate-fade-up">
+        <Link href="/calendar"
+          className="inline-flex items-center gap-1.5 text-[13px] text-ink-secondary hover:text-ink-primary mb-4 px-3 py-2 hover:bg-white rounded-[10px] transition-all">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          캘린더로
+        </Link>
+        <h1 className="text-[22px] font-bold text-ink-primary tracking-tight mb-1">캘린더 연동</h1>
+        <p className="text-[13px] text-ink-secondary">예약 일정을 자동으로 캘린더에 등록해드려요</p>
       </div>
 
-      {/* 선택한 날 일정 */}
-      <div style={{ fontWeight:700, fontSize:14, color:'#1F2A3D', marginBottom:10 }}>
-        {month+1}월 {selectedDay}일 ({WEEKDAYS[(firstDay+selectedDay-1)%7]}) 일정
-      </div>
+      {error && (
+        <div className="mb-4 px-3.5 py-3 bg-red-50 border border-red-200 rounded-[10px] text-[13px] text-red-800">{error}</div>
+      )}
+
       {loading ? (
-        <div style={{ textAlign:'center', padding:'40px 0', color:'#9AA5B5', fontSize:14 }}>불러오는 중...</div>
-      ) : selectedEvents.length===0 ? (
-        <div style={{ textAlign:'center', padding:'40px 0', background:White, borderRadius:14, boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div style={{ fontSize:32, marginBottom:8 }}>📅</div>
-          <p style={{ margin:0, fontSize:13, color:'#9AA5B5' }}>이날 등록된 일정이 없어요</p>
-        </div>
+        <div className="text-center py-16 text-[13px] text-ink-tertiary">불러오는 중...</div>
       ) : (
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          {selectedEvents.map((ev,i)=>{
-            const colors=['#3B7DD8','#3BA876','#B56B8A'];
-            const color=colors[i%colors.length];
+        <div className="flex flex-col gap-3 animate-fade-up anim-delay-100">
+          {PROVIDERS.map(p => {
+            const isConnected = connectedProviders.has(p.key);
+            const isLoading = actionLoading === p.key;
             return (
-              <div key={ev.id||i} style={{ background:White, borderRadius:14, padding:'14px 16px', boxShadow:'0 1px 4px rgba(0,0,0,0.06)', display:'flex', gap:12 }}>
-                <div style={{ width:3, background:color, borderRadius:2, flexShrink:0 }}/>
-                <div style={{ flex:1 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                    <span style={{ fontWeight:700, fontSize:14, color:'#1F2A3D' }}>{ev.title}</span>
-                    <span style={{ fontSize:13, fontWeight:600, color }}>{formatTime(ev)}</span>
+              <div key={p.key}
+                className={`bg-white border rounded-[16px] p-5 transition-all ${isConnected ? p.activeColor : p.color}`}>
+                <div className="flex items-center gap-4">
+                  <div className="flex-none w-12 h-12 rounded-[14px] bg-surface-muted flex items-center justify-center">
+                    {p.icon}
                   </div>
-                  {ev.description&&<p style={{ margin:0, fontSize:12, color:'#6B7889' }}>{ev.description}</p>}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[15px] font-bold text-ink-primary">{p.label}</span>
+                      {isConnected && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${p.badgeColor}`}>연결됨</span>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-ink-secondary">
+                      {isConnected ? '예약 일정이 자동으로 등록됩니다' : '연동하면 예약 일정을 자동으로 등록해요'}
+                    </p>
+                  </div>
+                  {isConnected ? (
+                    <button
+                      onClick={() => handleDisconnect(p.key)}
+                      disabled={isLoading}
+                      className="flex-none text-[12px] font-semibold text-ink-tertiary hover:text-red-600 px-3 py-2 rounded-[9px] hover:bg-red-50 transition-all disabled:opacity-50">
+                      {isLoading ? '처리 중...' : '해제'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleConnect(p.key)}
+                      disabled={isLoading}
+                      className="flex-none text-[12px] font-semibold text-brand-blue bg-brand-blue-light hover:bg-blue-100 px-3 py-2 rounded-[9px] transition-all disabled:opacity-50">
+                      {isLoading ? '...' : '연동하기'}
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* 안내 */}
+      <div className="mt-6 p-4 rounded-[14px] border border-dashed border-line bg-white animate-fade-up anim-delay-200">
+        <div className="flex gap-3">
+          <svg className="flex-none text-ink-tertiary mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <div>
+            <p className="text-[13px] font-semibold text-ink-primary mb-1">캘린더 연동 안내</p>
+            <p className="text-[12px] text-ink-secondary leading-relaxed">
+              통화에서 예약 날짜·시간이 감지되면 연동된 캘린더에 자동으로 일정이 추가돼요.
+              통화 상세 화면에서 수동으로 추가할 수도 있어요.
+            </p>
+          </div>
+        </div>
+      </div>
     </AppLayout>
   );
 }

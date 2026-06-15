@@ -10,12 +10,11 @@ import AppLayout from '../components/AppLayout';
 const DarkNavy='#3D4D6B', AccentBlue='#3B7DD8', White='#FFFFFF';
 
 const INDUSTRY_PRESETS = [
-  {label:'음식점', emoji:'🍽️', keywords:['예약','단체','알레르기','포장','배달','취소','자리','메뉴']},
-  {label:'부동산', emoji:'🏠', keywords:['계약서','잔금','전세','월세','임대','매물','방문','등기']},
-  {label:'미용실', emoji:'✂️', keywords:['예약','펌','염색','커트','탈색','두피','취소','변경']},
-  {label:'병원',   emoji:'🏥', keywords:['예약','진료','처방','재진','검사','취소','접수','수술']},
-  {label:'네일샵', emoji:'💅', keywords:['예약','젤네일','아트','제거','취소','연장','변경']},
-  {label:'자동차정비', emoji:'🔧', keywords:['입고','정비','엔진오일','타이어','점검','부품','견적']},
+  {label:'부동산 중개업', keywords:['매물','계약금','전세/월세','평수','입주일','등기','자리','메뉴']},
+  {label:'보험설계업', keywords:['보장내용','납입','갱신','특약','청구','만기']},
+  {label:'교육 사업', keywords:['수강료','커리큘럼(과정)','개강일','수강생','규정','상담예약']},
+  {label:'판매업',  keywords:['재고','단가','배송','발주','결제','반품']},
+  {label:'시공업', keywords:['견적','공사기간','자재','하자','평수']},
 ];
 
 const TABS=[{key:'keyword',label:'키워드'},{key:'filter',label:'통화 필터'},{key:'account',label:'계정'}];
