@@ -1,32 +1,21 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { watchAuthState } from '@/lib/firebase';
 import { callApi } from '@/lib/api';
 import AppLayout from '../../../components/AppLayout';
 
+const DarkNavy = '#3D4D6B';
+const AccentBlue = '#3B7DD8';
+const White = '#FFFFFF';
+
 export default function CallNotePage() {
-  const params = useParams();
   const router = useRouter();
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  // 정적 export에서 실제 callId 추출
   const [callId, setCallId] = useState(null);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const parts = window.location.pathname.split('/').filter(Boolean);
-      // /calls/[callId]/note
-      if (parts[0] === 'calls' && parts[1] && parts[1] !== 'placeholder' && parts[2] === 'note') {
-        setCallId(parts[1]);
-      } else if (params?.callId && params.callId !== 'placeholder') {
-        setCallId(params.callId);
-      }
-    }
-  }, [params]);
-
   const [memo, setMemo] = useState('');
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,22 +24,33 @@ export default function CallNotePage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  // callId를 URL에서 추출
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const parts = window.location.pathname.replace(/\/$/, '').split('/');
+    // /calls/[callId]/note
+    const noteIdx = parts.indexOf('note');
+    if (noteIdx > 0) {
+      const id = parts[noteIdx - 1];
+      if (id && id !== 'placeholder') {
+        setCallId(id);
+      }
+    }
+  }, []);
+
+  // callId 확보되면 데이터 로드
   useEffect(() => {
     if (!callId) return;
-    let redirectTimer = null;
-    const unsub = watchAuthState(async (user) => {
-      if (redirectTimer) clearTimeout(redirectTimer);
-      if (user) {
-        await loadNote();
-      } else {
-        redirectTimer = setTimeout(() => router.push('/login'), 5000);
-      }
-    });
-    return () => { unsub(); if (redirectTimer) clearTimeout(redirectTimer); };
-  }, [callId, router]);
+    // localStorage 토큰 확인만 — watchAuthState 없이
+    const token = localStorage.getItem('firebase_id_token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    loadNote();
+  }, [callId]);
 
   const loadNote = async () => {
-    if (!callId) return;
     setLoading(true);
     try {
       const res = await callApi.get(callId);
@@ -65,10 +65,8 @@ export default function CallNotePage() {
   };
 
   const handleSaveMemo = async () => {
-    setSaving(true);
-    setError('');
+    setSaving(true); setError('');
     try {
-      // PATCH /calls/:id { memo }
       const token = localStorage.getItem('firebase_id_token');
       await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/calls/${callId}`, {
         method: 'PATCH',
@@ -77,11 +75,8 @@ export default function CallNotePage() {
       });
       setMessage('💾 메모가 저장됐어요');
       setTimeout(() => setMessage(''), 2500);
-    } catch (e) {
-      setError('저장에 실패했습니다');
-    } finally {
-      setSaving(false);
-    }
+    } catch { setError('저장에 실패했습니다'); }
+    finally { setSaving(false); }
   };
 
   const handlePhotoUpload = async (file) => {
@@ -93,21 +88,14 @@ export default function CallNotePage() {
       setPhotos(prev => [...prev, { id: Date.now().toString(), url, name: file.name }]);
       setMessage('📷 사진이 추가됐어요');
       setTimeout(() => setMessage(''), 2500);
-    } catch (e) {
-      setError('사진 업로드에 실패했습니다');
-    } finally {
-      setUploading(false);
-    }
+    } catch { setError('사진 업로드에 실패했습니다'); }
+    finally { setUploading(false); }
   };
 
   const handleDeletePhoto = (photoId) => {
     if (!confirm('사진을 삭제할까요?')) return;
     setPhotos(prev => prev.filter(p => p.id !== photoId));
   };
-
-  const DarkNavy = '#3D4D6B';
-  const AccentBlue = '#3B7DD8';
-  const White = '#FFFFFF';
 
   return (
     <AppLayout title="통화 메모" rightAction={
@@ -118,7 +106,7 @@ export default function CallNotePage() {
       {message && <div style={{ marginBottom:14, padding:'12px 16px', background:'#E3FBED', borderRadius:10, fontSize:13, color:'#1A7A3C' }}>{message}</div>}
       {error && <div style={{ marginBottom:14, padding:'12px 16px', background:'#FBE3E3', borderRadius:10, fontSize:13, color:'#C23B3B' }}>{error}</div>}
 
-      {!callId || loading ? (
+      {loading ? (
         <div style={{ textAlign:'center', padding:'60px 0', color:'#9AA5B5', fontSize:14 }}>불러오는 중...</div>
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
@@ -152,7 +140,6 @@ export default function CallNotePage() {
               <span style={{ fontSize:18 }}>📷</span>
               <span style={{ fontWeight:700, fontSize:15, color:'#1F2A3D' }}>첨부 사진</span>
             </div>
-
             {photos.length > 0 && (
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:14 }}>
                 {photos.map(photo => (
@@ -167,10 +154,8 @@ export default function CallNotePage() {
                 ))}
               </div>
             )}
-
             <input ref={fileInputRef} type="file" accept="image/*" onChange={e => handlePhotoUpload(e.target.files?.[0])} style={{ display:'none' }} />
             <input ref={cameraInputRef} type="file" accept="image/*" capture="camera" onChange={e => handlePhotoUpload(e.target.files?.[0])} style={{ display:'none' }} />
-
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
               <button onClick={() => fileInputRef.current?.click()} disabled={uploading} style={{
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8,
@@ -193,11 +178,10 @@ export default function CallNotePage() {
                 카메라
               </button>
             </div>
-            {uploading && <div style={{ marginTop:8, textAlign:'center', fontSize:12, color:'#9AA5B5' }}>사진 업로드 중...</div>}
+            {uploading && <div style={{ marginTop:8, textAlign:'center', fontSize:12, color:'#9AA5B5' }}>업로드 중...</div>}
           </div>
         </div>
       )}
     </AppLayout>
   );
 }
-
