@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { watchAuthState } from '@/lib/firebase';
 import { callApi } from '@/lib/api';
-import NavLayout from '../components/NavLayout';
+import AppLayout from '../components/AppLayout';
 
 function formatDate(s) {
   if (!s) return '-';
@@ -88,7 +88,7 @@ export default function PendingPage() {
   };
 
   return (
-    <NavLayout>
+    <AppLayout>
       <div className="flex items-center justify-between mb-5 animate-fade-up">
         <div>
           <h1 className="text-[22px] font-bold text-ink-primary tracking-tight mb-0.5">업로드 승인</h1>
@@ -153,6 +153,6 @@ export default function PendingPage() {
           ))}
         </div>
       )}
-    </NavLayout>
+    </AppLayout>
   );
 }

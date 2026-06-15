@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { watchAuthState } from '@/lib/firebase';
 import { calendarConnectApi } from '@/lib/api';
-import NavLayout from '../../components/NavLayout';
+import AppLayout from '../../components/AppLayout';
 
 const PROVIDERS = [
   {
@@ -101,7 +101,7 @@ export default function CalendarConnectPage() {
   };
 
   return (
-    <NavLayout>
+    <AppLayout>
       <div className="mb-6 animate-fade-up">
         <Link href="/calendar"
           className="inline-flex items-center gap-1.5 text-[13px] text-ink-secondary hover:text-ink-primary mb-4 px-3 py-2 hover:bg-white rounded-[10px] transition-all">
@@ -180,6 +180,6 @@ export default function CalendarConnectPage() {
           </div>
         </div>
       </div>
-    </NavLayout>
+    </AppLayout>
   );
 }

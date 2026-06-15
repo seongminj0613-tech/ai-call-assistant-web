@@ -1,6 +1,6 @@
 'use client';
 
-import NavLayout from '../../components/NavLayout';
+import AppLayout from '../../components/AppLayout';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -267,7 +267,7 @@ const sttLines = useMemo(() => {
   const progressPct = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0;
 
   return (
-    <NavLayout>
+    <AppLayout title="통화 상세">
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => router.back()}
@@ -547,6 +547,6 @@ const sttLines = useMemo(() => {
           </div>
         </details>
       </div>
-    </NavLayout>
+    </AppLayout>
   );
 }

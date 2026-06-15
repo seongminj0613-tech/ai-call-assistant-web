@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { watchAuthState } from '@/lib/firebase';
 import { callApi } from '@/lib/api';
-import NavLayout from '../../../components/NavLayout';
+import AppLayout from '../../../components/AppLayout';
 
 export default function CallNotePage() {
   const { callId } = useParams();
@@ -84,7 +84,7 @@ export default function CallNotePage() {
   };
 
   return (
-    <NavLayout>
+    <AppLayout>
       <div className="mb-5 animate-fade-up">
         <Link href={`/calls/${callId}`}
           className="inline-flex items-center gap-1.5 text-[13px] text-ink-secondary hover:text-ink-primary mb-4 px-3 py-2 hover:bg-white rounded-[10px] transition-all">
@@ -172,6 +172,6 @@ export default function CallNotePage() {
           </div>
         </div>
       )}
-    </NavLayout>
+    </AppLayout>
   );
 }
