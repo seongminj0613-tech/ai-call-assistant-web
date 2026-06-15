@@ -180,13 +180,49 @@ function CustomerDetail({ customer: c }) {
       <div style={{ fontWeight:700, fontSize:14, color:'#1F2A3D', marginBottom:10 }}>통화 이력</div>
       <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
         {c.calls.map(call=>(
-          <Link key={call.id} href={`/calls/${call.id}`} style={{ display:'block', background:'#FFFFFF', borderRadius:14, padding:'14px 16px', textDecoration:'none', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-              <span style={{ fontSize:12, fontWeight:600, padding:'2px 8px', borderRadius:4, background:'#E3EEFB', color:'#2563B5' }}>{call.category||'분류없음'}</span>
-              <span style={{ fontSize:11, color:'#9AA5B5' }}>{formatDate(call.created_at)}</span>
+          <div key={call.id} style={{ background:'#FFFFFF', borderRadius:14, boxShadow:'0 1px 4px rgba(0,0,0,0.06)', overflow:'hidden' }}>
+            {/* 통화 요약 영역 — 클릭하면 상세로 */}
+            <Link href={`/calls/${call.id}`} style={{ display:'block', padding:'14px 16px', textDecoration:'none' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                <span style={{ fontSize:12, fontWeight:600, padding:'2px 8px', borderRadius:4, background:'#E3EEFB', color:'#2563B5' }}>{call.category||'분류없음'}</span>
+                <span style={{ fontSize:11, color:'#9AA5B5' }}>{formatDate(call.created_at)}</span>
+              </div>
+              {call.summary&&<p style={{ margin:0, fontSize:12, color:'#6B7889', lineHeight:1.5 }}>{call.summary}</p>}
+            </Link>
+
+            {/* 메모 / 사진 버튼 */}
+            <div style={{ display:'flex', borderTop:'1px solid #F0F2F5' }}>
+              <Link href={`/calls/${call.id}/note`} style={{
+                flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                padding:'10px 0', textDecoration:'none',
+                color:'#6B7889', fontSize:12, fontWeight:600,
+                borderRight:'1px solid #F0F2F5',
+                transition:'background 0.15s',
+              }}
+              onMouseEnter={e=>e.currentTarget.style.background='#F8F9FA'}
+              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                메모
+              </Link>
+              <Link href={`/calls/${call.id}/note`} style={{
+                flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                padding:'10px 0', textDecoration:'none',
+                color:'#6B7889', fontSize:12, fontWeight:600,
+                transition:'background 0.15s',
+              }}
+              onMouseEnter={e=>e.currentTarget.style.background='#F8F9FA'}
+              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                사진
+              </Link>
             </div>
-            {call.summary&&<p style={{ margin:0, fontSize:12, color:'#6B7889', lineHeight:1.5 }}>{call.summary}</p>}
-          </Link>
+          </div>
         ))}
       </div>
     </div>
