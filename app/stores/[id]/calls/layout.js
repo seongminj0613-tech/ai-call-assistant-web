@@ -1,0 +1,9 @@
+export async function generateStaticParams() {
+  return [{ id: 'placeholder' }];
+}
+
+export const dynamicParams = true;
+
+export default function Layout({ children }) {
+  return children;
+}
