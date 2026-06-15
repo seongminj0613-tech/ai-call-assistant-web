@@ -2,57 +2,41 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { watchAuthState } from '@/lib/firebase';
 import { callApi } from '@/lib/api';
-import NavLayout from '../components/NavLayout';
+import AppLayout from '../components/AppLayout';
 
-const KO_CATEGORY_MAP = {
-  '예약': 'reservation', '주문': 'order', '취소': 'cancel_refund',
-  '불만': 'complaint', '문의': 'hours_location', '기타': 'other',
-};
+const DarkNavy = '#3D4D6B';
+const AccentBlue = '#3B7DD8';
+const White = '#FFFFFF';
 
-const CUST_FILTERS = [
-  { key: 'all',    label: '전체' },
-  { key: 'vip',    label: 'VIP' },
-  { key: 'new',    label: '신규' },
-  { key: 'recent', label: '최근' },
-];
+const KO_MAP = {'예약':'reservation','주문':'order','취소':'cancel_refund','불만':'complaint','문의':'hours_location','기타':'other'};
 
 function buildCustomers(calls) {
-  const grouped = {};
-  calls.filter(c => c.caller_number).forEach(c => {
-    const phone = c.caller_number;
-    if (!grouped[phone]) grouped[phone] = [];
-    grouped[phone].push(c);
+  const map = {};
+  calls.filter(c=>c.caller_number).forEach(c=>{
+    const p=c.caller_number;
+    if(!map[p])map[p]=[];
+    map[p].push(c);
   });
-  return Object.entries(grouped).map(([phone, cs]) => {
-    const sorted = [...cs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    const latest = sorted[0];
-    let info = latest.extracted_info;
-    if (typeof info === 'string') { try { info = JSON.parse(info); } catch { info = null; } }
-    const name = cs.map(c => {
-      let i = c.extracted_info;
-      if (typeof i === 'string') { try { i = JSON.parse(i); } catch { i = null; } }
-      return i?.customer_name;
-    }).find(n => n && n.trim());
-    return {
-      phone,
-      name: name || null,
-      callCount: cs.length,
-      lastCallAt: latest.created_at,
-      lastSummary: latest.summary,
-      categories: [...new Set(cs.map(c => c.category).filter(Boolean))],
-      calls: sorted,
-      isVip: cs.length >= 3,
-    };
-  }).sort((a, b) => b.callCount - a.callCount);
+  return Object.entries(map).map(([phone,cs])=>{
+    const sorted=[...cs].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    const latest=sorted[0];
+    let info=latest.extracted_info;
+    if(typeof info==='string'){try{info=JSON.parse(info);}catch{info=null;}}
+    const name=cs.map(c=>{let i=c.extracted_info;if(typeof i==='string'){try{i=JSON.parse(i);}catch{i=null;}}return i?.customer_name;}).find(n=>n&&n.trim());
+    return {phone,name:name||null,callCount:cs.length,lastCallAt:latest.created_at,lastSummary:latest.summary,calls:sorted,isVip:cs.length>=3};
+  }).sort((a,b)=>b.callCount-a.callCount);
 }
 
 function formatDate(s) {
-  if (!s) return '-';
-  const d = new Date(s);
-  return d.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  if(!s) return '-';
+  const d=new Date(s);
+  return d.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 }
+
+const FILTERS = [{key:'all',label:'전체'},{key:'vip',label:'VIP'},{key:'new',label:'신규'},{key:'recent',label:'최근'}];
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -62,189 +46,147 @@ export default function CustomersPage() {
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => {
-    const unsub = watchAuthState(async (user) => {
-      if (!user) { router.push('/login'); return; }
-      try {
-        const res = await callApi.list({ limit: 500 });
-        setCalls(res.data.calls || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+  useEffect(()=>{
+    const unsub=watchAuthState(async(user)=>{
+      if(!user){router.push('/login');return;}
+      try{const res=await callApi.list({limit:500});setCalls(res.data.calls||[]);}
+      catch(e){console.error(e);}
+      finally{setLoading(false);}
     });
-    return () => unsub();
-  }, [router]);
+    return()=>unsub();
+  },[router]);
 
-  const customers = useMemo(() => buildCustomers(calls), [calls]);
+  const customers = useMemo(()=>buildCustomers(calls),[calls]);
 
-  const filtered = useMemo(() => {
-    let list = [...customers];
-    if (filter === 'vip') list = list.filter(c => c.isVip);
-    else if (filter === 'new') list = list.filter(c => c.callCount === 1);
-    else if (filter === 'recent') list = [...list].sort((a, b) => new Date(b.lastCallAt) - new Date(a.lastCallAt));
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter(c => c.phone.includes(q) || (c.name && c.name.toLowerCase().includes(q)));
-    }
+  const filtered = useMemo(()=>{
+    let list=[...customers];
+    if(filter==='vip') list=list.filter(c=>c.isVip);
+    else if(filter==='new') list=list.filter(c=>c.callCount===1);
+    else if(filter==='recent') list=[...list].sort((a,b)=>new Date(b.lastCallAt)-new Date(a.lastCallAt));
+    if(search.trim()){const q=search.trim().toLowerCase();list=list.filter(c=>c.phone.includes(q)||(c.name&&c.name.toLowerCase().includes(q)));}
     return list;
-  }, [customers, filter, search]);
+  },[customers,filter,search]);
 
   if (selected) {
     return (
-      <NavLayout>
-        <CustomerDetail customer={selected} onBack={() => setSelected(null)} />
-      </NavLayout>
+      <AppLayout title={selected.name || selected.phone} rightAction={
+        <button onClick={()=>setSelected(null)} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:8, padding:'6px 10px', color:'white', cursor:'pointer', fontSize:12 }}>목록으로</button>
+      }>
+        <CustomerDetail customer={selected} />
+      </AppLayout>
     );
   }
 
   return (
-    <NavLayout>
-      <div className="mb-5 animate-fade-up">
-        <h1 className="text-[22px] font-bold text-ink-primary tracking-tight mb-1">고객 관리</h1>
-        <p className="text-[13px] text-ink-secondary">전화번호 기준으로 고객별 통화 이력을 확인해요</p>
-      </div>
-
+    <AppLayout title="고객 관리">
       {/* 통계 */}
-      <div className="grid grid-cols-3 gap-3 mb-5 animate-fade-up anim-delay-100">
-        {[
-          ['전체 고객', customers.length, 'bg-blue-50 text-blue-700'],
-          ['VIP (3회↑)', customers.filter(c => c.isVip).length, 'bg-purple-50 text-purple-700'],
-          ['신규 고객', customers.filter(c => c.callCount === 1).length, 'bg-emerald-50 text-emerald-700'],
-        ].map(([label, count, cls]) => (
-          <div key={label} className={`rounded-[14px] p-3.5 text-center ${cls}`}>
-            <div className="text-[24px] font-extrabold tabular-nums">{loading ? '-' : count}</div>
-            <div className="text-[11px] font-semibold mt-0.5 opacity-80">{label}</div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:16 }}>
+        {[['전체 고객', customers.length, '#E3EEFB','#2563B5'],
+          ['VIP (3회↑)', customers.filter(c=>c.isVip).length, '#EBE9FB','#5B4FC2'],
+          ['신규 고객', customers.filter(c=>c.callCount===1).length, '#E3FBED','#1A7A3C']].map(([label,count,bg,fg])=>(
+          <div key={label} style={{ background:bg, borderRadius:14, padding:'14px 12px', textAlign:'center' }}>
+            <div style={{ fontSize:26, fontWeight:800, color:fg }}>{loading?'-':count}</div>
+            <div style={{ fontSize:11, fontWeight:600, color:fg, opacity:0.8, marginTop:2 }}>{label}</div>
           </div>
         ))}
       </div>
 
       {/* 검색 + 필터 */}
-      <div className="mb-4 animate-fade-up anim-delay-200">
-        <div className="flex items-center gap-2 bg-white border border-line rounded-[11px] px-3 py-2 mb-3">
-          <svg className="text-ink-tertiary flex-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input type="text" placeholder="이름 또는 전화번호 검색..."
-            value={search} onChange={e => setSearch(e.target.value)}
-            className="flex-1 text-[13px] bg-transparent outline-none text-ink-primary placeholder:text-ink-tertiary" />
+      <div style={{ marginBottom:16 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, background:White, borderRadius:12, padding:'10px 14px', marginBottom:12, boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9AA5B5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="이름 또는 전화번호 검색..." value={search} onChange={e=>setSearch(e.target.value)}
+            style={{ flex:1, border:'none', outline:'none', fontSize:13, color:'#1F2A3D', background:'transparent' }} />
         </div>
-        <div className="flex gap-2">
-          {CUST_FILTERS.map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all ${
-                filter === f.key ? 'bg-brand-blue text-white' : 'bg-white border border-line text-ink-secondary hover:border-brand-blue/40'
-              }`}>{f.label}</button>
+        <div style={{ display:'flex', gap:8 }}>
+          {FILTERS.map(f=>(
+            <button key={f.key} onClick={()=>setFilter(f.key)} style={{
+              padding:'6px 14px', borderRadius:20, border:'none', cursor:'pointer', fontSize:12, fontWeight:600,
+              background:filter===f.key?DarkNavy:White, color:filter===f.key?White:'#6B7889',
+              boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
+            }}>{f.label}</button>
           ))}
         </div>
       </div>
 
       {/* 고객 목록 */}
-      <div className="animate-fade-up anim-delay-300">
-        {loading ? (
-          <div className="text-center py-16 text-[13px] text-ink-tertiary">불러오는 중...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-[14px] border border-dashed border-line">
-            <div className="text-3xl mb-2">👥</div>
-            <p className="text-[14px] font-bold text-ink-primary mb-1">고객이 없어요</p>
-            <p className="text-[12px] text-ink-secondary">통화가 등록되면 자동으로 고객이 생성돼요</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {filtered.map(c => (
-              <button key={c.phone} onClick={() => setSelected(c)}
-                className="w-full text-left bg-white border border-line rounded-[14px] p-4 transition-all hover:border-brand-blue hover:shadow-[0_4px_12px_rgba(59,130,246,0.08)]">
-                <div className="flex items-center gap-3">
-                  <div className={`flex-none w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold ${
-                    c.isVip ? 'bg-purple-100 text-purple-700' : 'bg-brand-blue-light text-brand-blue'
-                  }`}>
-                    {c.isVip ? '⭐' : (c.name ? c.name[0] : '👤')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-[14px] font-bold text-ink-primary tabular-nums truncate">{c.phone}</span>
-                      {c.isVip && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">VIP</span>
-                      )}
-                      {c.callCount === 1 && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">신규</span>
-                      )}
-                    </div>
-                    {c.name && <div className="text-[12px] text-ink-secondary mb-0.5">{c.name}</div>}
-                    {c.lastSummary && (
-                      <div className="text-[11px] text-ink-tertiary truncate">{c.lastSummary}</div>
-                    )}
-                  </div>
-                  <div className="flex-none text-right">
-                    <div className="text-[13px] font-bold text-ink-primary tabular-nums">{c.callCount}회</div>
-                    <div className="text-[10px] text-ink-tertiary mt-0.5">{formatDate(c.lastCallAt)}</div>
-                  </div>
+      {loading ? (
+        <div style={{ textAlign:'center', padding:'60px 0', color:'#9AA5B5', fontSize:14 }}>불러오는 중...</div>
+      ) : filtered.length===0 ? (
+        <div style={{ textAlign:'center', padding:'60px 0', color:'#9AA5B5', fontSize:14 }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>👥</div>
+          고객이 없어요
+        </div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {filtered.map(c=>(
+            <button key={c.phone} onClick={()=>setSelected(c)} style={{
+              display:'flex', alignItems:'center', gap:12, background:White, borderRadius:14,
+              padding:'14px 16px', border:'none', cursor:'pointer', textAlign:'left',
+              boxShadow:'0 1px 4px rgba(0,0,0,0.06)', width:'100%', transition:'box-shadow 0.15s',
+            }}>
+              <div style={{ width:44, height:44, borderRadius:'50%', background:c.isVip?'#7B6BC2':DarkNavy, display:'flex', alignItems:'center', justifyContent:'center', color:White, fontWeight:700, fontSize:16, flexShrink:0 }}>
+                {c.isVip ? '⭐' : (c.name||c.phone).slice(0,1).toUpperCase()}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3 }}>
+                  <span style={{ fontWeight:700, fontSize:14, color:'#1F2A3D', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.phone}</span>
+                  {c.isVip&&<span style={{ fontSize:10, fontWeight:700, padding:'2px 6px', borderRadius:10, background:'#EBE9FB', color:'#5B4FC2' }}>VIP</span>}
+                  {c.callCount===1&&<span style={{ fontSize:10, fontWeight:700, padding:'2px 6px', borderRadius:10, background:'#E3FBED', color:'#1A7A3C' }}>신규</span>}
                 </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </NavLayout>
+                {c.name&&<div style={{ fontSize:12, color:'#6B7889', marginBottom:2 }}>{c.name}</div>}
+                {c.lastSummary&&<p style={{ margin:0, fontSize:11, color:'#9AA5B5', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.lastSummary}</p>}
+              </div>
+              <div style={{ flexShrink:0, textAlign:'right' }}>
+                <div style={{ fontSize:14, fontWeight:800, color:'#1F2A3D' }}>{c.callCount}<span style={{ fontSize:11, fontWeight:400, color:'#9AA5B5' }}>회</span></div>
+                <div style={{ fontSize:10, color:'#9AA5B5', marginTop:2 }}>{formatDate(c.lastCallAt)}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </AppLayout>
   );
 }
 
-function CustomerDetail({ customer: c, onBack }) {
+function CustomerDetail({ customer: c }) {
   return (
     <div>
-      <button onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-[13px] text-ink-secondary hover:text-ink-primary mb-5 px-3 py-2 hover:bg-white rounded-[10px] transition-all">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
-        </svg>
-        고객 목록으로
-      </button>
-
-      {/* 고객 헤더 */}
-      <div className="bg-white border border-line rounded-[16px] p-5 mb-4">
-        <div className="flex items-center gap-3.5 mb-4">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold ${
-            c.isVip ? 'bg-purple-100 text-purple-700' : 'bg-brand-blue-light text-brand-blue'
-          }`}>
-            {c.isVip ? '⭐' : (c.name ? c.name[0] : '👤')}
+      {/* 고객 헤더 카드 */}
+      <div style={{ background:'#FFFFFF', borderRadius:16, padding:20, marginBottom:16, boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:16 }}>
+          <div style={{ width:56, height:56, borderRadius:'50%', background:c.isVip?'#7B6BC2':DarkNavy, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, fontSize:22 }}>
+            {c.isVip?'⭐':(c.name||c.phone).slice(0,1).toUpperCase()}
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[18px] font-bold text-ink-primary tabular-nums">{c.phone}</span>
-              {c.isVip && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">VIP</span>}
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+              <span style={{ fontSize:18, fontWeight:700, color:'#1F2A3D' }}>{c.phone}</span>
+              {c.isVip&&<span style={{ fontSize:11, fontWeight:700, padding:'3px 8px', borderRadius:10, background:'#EBE9FB', color:'#5B4FC2' }}>VIP</span>}
             </div>
-            {c.name && <div className="text-[14px] text-ink-secondary">{c.name}</div>}
+            {c.name&&<div style={{ fontSize:14, color:'#6B7889' }}>{c.name}</div>}
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3 pt-4 border-t border-line">
-          {[
-            ['총 통화', `${c.callCount}회`],
-            ['마지막 통화', formatDate(c.lastCallAt)],
-            ['카테고리', c.categories.join(', ') || '-'],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <div className="text-[10px] text-ink-tertiary mb-0.5">{label}</div>
-              <div className="text-[12px] font-semibold text-ink-primary">{value}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, paddingTop:14, borderTop:'1px solid #F0F2F5' }}>
+          {[['총 통화',`${c.callCount}회`],['마지막 통화',formatDate(c.lastCallAt)],['상태',c.isVip?'VIP':'일반']].map(([label,value])=>(
+            <div key={label} style={{ textAlign:'center' }}>
+              <div style={{ fontSize:10, color:'#9AA5B5', marginBottom:3 }}>{label}</div>
+              <div style={{ fontSize:13, fontWeight:600, color:'#1F2A3D' }}>{value}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* 통화 이력 */}
-      <h2 className="text-[14px] font-bold text-ink-primary mb-3">통화 이력</h2>
-      <div className="flex flex-col gap-2.5">
-        {c.calls.map(call => (
-          <a key={call.id} href={`/calls/${call.id}`}
-            className="block bg-white border border-line rounded-[14px] p-4 hover:border-brand-blue transition-all">
-            <div className="flex items-start justify-between mb-2">
-              <span className={`text-[11px] font-bold px-2 py-[2px] rounded-md border ${
-                call.category ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'
-              }`}>{call.category || '분류없음'}</span>
-              <span className="text-[11px] text-ink-tertiary tabular-nums">{formatDate(call.created_at)}</span>
+      <div style={{ fontWeight:700, fontSize:14, color:'#1F2A3D', marginBottom:10 }}>통화 이력</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+        {c.calls.map(call=>(
+          <Link key={call.id} href={`/calls/${call.id}`} style={{ display:'block', background:'#FFFFFF', borderRadius:14, padding:'14px 16px', textDecoration:'none', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+              <span style={{ fontSize:12, fontWeight:600, padding:'2px 8px', borderRadius:4, background:'#E3EEFB', color:'#2563B5' }}>{call.category||'분류없음'}</span>
+              <span style={{ fontSize:11, color:'#9AA5B5' }}>{formatDate(call.created_at)}</span>
             </div>
-            {call.summary && <p className="text-[12px] text-ink-secondary leading-relaxed line-clamp-2">{call.summary}</p>}
-          </a>
+            {call.summary&&<p style={{ margin:0, fontSize:12, color:'#6B7889', lineHeight:1.5 }}>{call.summary}</p>}
+          </Link>
         ))}
       </div>
     </div>

@@ -220,17 +220,7 @@ export default function DashboardPage() {
               📤
             </button>
           </div>
-          {/* 토글 */}
-          <div style={{ display:'flex', justifyContent:'center', gap:20, marginTop:12 }}>
-            <label style={{ display:'flex', alignItems:'center', gap:6, color:'rgba(255,255,255,0.75)', fontSize:12, cursor:'pointer' }}>
-              <input type="checkbox" checked={autoSummary} onChange={e=>setAutoSummary(e.target.checked)} style={{ accentColor:AccentBlue }} />
-              통화 자동 요약 {autoSummary?'ON':'OFF'}
-            </label>
-            <label style={{ display:'flex', alignItems:'center', gap:6, color:'rgba(255,255,255,0.75)', fontSize:12, cursor:'pointer' }}>
-              <input type="checkbox" checked={importantFilter} onChange={e=>setImportantFilter(e.target.checked)} style={{ accentColor:AccentBlue }} />
-              중요 통화 필터링 {importantFilter?'ON':'OFF'}
-            </label>
-          </div>
+
         </div>
 
         {/* 콘텐츠 그리드 */}
