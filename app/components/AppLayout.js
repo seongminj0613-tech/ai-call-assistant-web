@@ -45,10 +45,21 @@ export default function AppLayout({ children, title = 'AI 통화비서', rightAc
 
   useEffect(() => {
     setNickname(localStorage.getItem('user_nickname') || '사용자');
+    let redirectTimer = null;
     const unsub = watchAuthState((user) => {
-      if (!user) router.push('/login');
+      // 기존 타이머 취소
+      if (redirectTimer) clearTimeout(redirectTimer);
+      if (!user) {
+        // Firebase 초기화 딜레이 고려해서 5초 대기 후 리다이렉트
+        redirectTimer = setTimeout(() => {
+          router.push('/login');
+        }, 5000);
+      }
     });
-    return () => unsub();
+    return () => {
+      unsub();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [router]);
 
   const isActive = (href) => {
