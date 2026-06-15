@@ -76,12 +76,52 @@ export default function CalendarConnectPage() {
     try {
       const redirectUri = `${window.location.origin}/oauth/${provider}`;
       const state = Math.random().toString(36).slice(2);
-      const res = await calendarConnectApi.getOAuthUrl(provider, redirectUri, state);
-      const url = res.data?.oauth_url || res.data?.url;
+
+      // Firebase 토큰을 state에 포함 (캘린더 연동 콜백에서 인증용)
+      const token = localStorage.getItem('firebase_id_token');
+      const stateObj = btoa(JSON.stringify({ firebase_token: token, state }));
+
+      let url = '';
+      if (provider === 'google') {
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        if (!clientId) { setError('Google Client ID가 없습니다'); return; }
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'code',
+          scope: 'https://www.googleapis.com/auth/calendar',
+          state: stateObj,
+          access_type: 'offline',
+          prompt: 'consent',
+        });
+        url = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+      } else if (provider === 'kakao') {
+        const clientId = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY || 'a05635006ea378df6a0a4ba7de8aed61';
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'code',
+          scope: 'talk_calendar',
+          state: stateObj,
+        });
+        url = `https://kauth.kakao.com/oauth/authorize?${params}`;
+      } else if (provider === 'naver') {
+        const clientId = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID;
+        if (!clientId) { setError('Naver Client ID가 없습니다'); return; }
+        const params = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'code',
+          state: stateObj,
+          scope: 'calendar',
+        });
+        url = `https://nid.naver.com/oauth2.0/authorize?${params}`;
+      }
+
       if (url) window.location.href = url;
-      else setError('OAuth URL을 받지 못했습니다');
+      else setError('지원하지 않는 제공자입니다');
     } catch (e) {
-      setError(e.response?.data?.message || `${provider} 연동 시작에 실패했습니다`);
+      setError(`${provider} 연동 시작에 실패했습니다`);
     } finally {
       setActionLoading('');
     }
