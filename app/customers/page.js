@@ -28,6 +28,14 @@ function buildCustomers(calls) {
   }).sort((a,b)=>b.callCount-a.callCount);
 }
 
+function getSummary(call) {
+  const s = call?.summary || call?.lastSummary;
+  if (!s) return '';
+  if (typeof s === 'string') return s;
+  if (typeof s === 'object') return s.label || s.code || s.text || '';
+  return String(s);
+}
+
 function formatDate(s) {
   if(!s) return '-';
   const d=new Date(s);
