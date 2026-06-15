@@ -21,7 +21,7 @@ export default function CalendarPage() {
 
   useEffect(()=>{
     const unsub=watchAuthState(async(user)=>{
-      if(!user){router.push('/login');return;}
+      if(!user){setTimeout(()=>router.push('/login'),5000);return;}
       await loadEvents(year,month);
     });
     return()=>unsub();

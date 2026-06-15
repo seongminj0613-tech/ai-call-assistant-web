@@ -35,7 +35,7 @@ export default function PendingPage() {
 
   useEffect(() => {
     const unsub = watchAuthState(async (user) => {
-      if (!user) { router.push('/login'); return; }
+      if (!user) { setTimeout(() => router.push('/login'), 5000); return; }
       await loadPending();
     });
     return () => unsub();

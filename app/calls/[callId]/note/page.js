@@ -22,11 +22,16 @@ export default function CallNotePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let redirectTimer = null;
     const unsub = watchAuthState(async (user) => {
-      if (!user) { router.push('/login'); return; }
-      await loadNote();
+      if (redirectTimer) clearTimeout(redirectTimer);
+      if (user) {
+        await loadNote();
+      } else {
+        redirectTimer = setTimeout(() => router.push('/login'), 5000);
+      }
     });
-    return () => unsub();
+    return () => { unsub(); if (redirectTimer) clearTimeout(redirectTimer); };
   }, [callId, router]);
 
   const loadNote = async () => {

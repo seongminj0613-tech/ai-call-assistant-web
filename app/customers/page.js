@@ -48,7 +48,7 @@ export default function CustomersPage() {
 
   useEffect(()=>{
     const unsub=watchAuthState(async(user)=>{
-      if(!user){router.push('/login');return;}
+      if(!user){setTimeout(()=>router.push('/login'),5000);return;}
       try{const res=await callApi.list({limit:500});setCalls(res.data.calls||[]);}
       catch(e){console.error(e);}
       finally{setLoading(false);}

@@ -43,7 +43,7 @@ export default function SettingsPage() {
 
   useEffect(()=>{
     const unsub=watchAuthState(async(user)=>{
-      if(!user){router.push('/login');return;}
+      if(!user){setTimeout(()=>router.push('/login'),5000);return;}
       await loadData();
     });
     return()=>unsub();

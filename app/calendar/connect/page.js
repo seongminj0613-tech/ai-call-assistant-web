@@ -50,7 +50,7 @@ export default function CalendarConnectPage() {
 
   useEffect(() => {
     const unsub = watchAuthState(async (user) => {
-      if (!user) { router.push('/login'); return; }
+      if (!user) { setTimeout(() => router.push('/login'), 5000); return; }
       await loadConnections();
     });
     return () => unsub();
