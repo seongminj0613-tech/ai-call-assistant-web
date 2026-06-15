@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { logout, watchAuthState } from '@/lib/firebase';
+import { logout } from '@/lib/firebase';
 
 const DarkNavy = '#3D4D6B';
 const DarkNavyDeep = '#2E3D56';
@@ -45,22 +45,7 @@ export default function AppLayout({ children, title = 'AI 통화비서', rightAc
 
   useEffect(() => {
     setNickname(localStorage.getItem('user_nickname') || '사용자');
-    let redirectTimer = null;
-    const unsub = watchAuthState((user) => {
-      // 기존 타이머 취소
-      if (redirectTimer) clearTimeout(redirectTimer);
-      if (!user) {
-        // Firebase 초기화 딜레이 고려해서 5초 대기 후 리다이렉트
-        redirectTimer = setTimeout(() => {
-          router.push('/login');
-        }, 5000);
-      }
-    });
-    return () => {
-      unsub();
-      if (redirectTimer) clearTimeout(redirectTimer);
-    };
-  }, [router]);
+  }, []);
 
   const isActive = (href) => {
     if (href === '/dashboard') return pathname === '/dashboard';
