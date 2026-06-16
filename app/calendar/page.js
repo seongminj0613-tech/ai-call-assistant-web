@@ -10,6 +10,17 @@ import AppLayout from '../components/AppLayout';
 const DarkNavy='#3D4D6B', AccentBlue='#3B7DD8', White='#FFFFFF';
 const WEEKDAYS=['일','월','화','수','목','금','토'];
 
+function parseEventDate(value) {
+  if (!value) return null;
+  const d = new Date(String(value).replace(' ', 'T'));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function getEventStartDate(ev) {
+  return parseEventDate(ev?.start_at || ev?.start_datetime || ev?.start);
+}
+
+
 export default function CalendarPage() {
   const router = useRouter();
   const now = new Date();
@@ -47,7 +58,8 @@ export default function CalendarPage() {
   const eventsByDay=useMemo(()=>{
     const m={};
     events.forEach(ev=>{
-      const d=ev.day_of_month||(ev.start_datetime?new Date(ev.start_datetime).getDate():null);
+      const start=getEventStartDate(ev);
+      const d=ev.day_of_month||(start?start.getDate():null);
       if(d){if(!m[d])m[d]=[];m[d].push(ev);}
     });
     return m;
@@ -60,7 +72,8 @@ export default function CalendarPage() {
 
   const formatTime=(ev)=>{
     if(ev.time) return ev.time;
-    if(ev.start_datetime) return new Date(ev.start_datetime).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+    const start=getEventStartDate(ev);
+    if(start) return start.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
     return '';
   };
 

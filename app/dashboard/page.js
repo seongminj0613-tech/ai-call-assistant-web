@@ -65,6 +65,17 @@ function buildCustomers(calls) {
 
 const WEEKDAYS=['일','월','화','수','목','금','토'];
 
+function parseEventDate(value) {
+  if (!value) return null;
+  const d = new Date(String(value).replace(' ', 'T'));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function getEventStartDate(ev) {
+  return parseEventDate(ev?.start_at || ev?.start_datetime || ev?.start);
+}
+
+
 export default function DashboardPage() {
   const router = useRouter();
   const fileInputRef = useRef(null);
@@ -137,7 +148,7 @@ export default function DashboardPage() {
   const lastDate=new Date(calYear,calMonth+1,0).getDate();
   const eventsByDay=useMemo(()=>{
     const m={};
-    events.forEach(ev=>{const d=ev.day_of_month||(ev.start_datetime?new Date(ev.start_datetime).getDate():null);if(d){if(!m[d])m[d]=[];m[d].push(ev);}});
+    events.forEach(ev=>{const start=getEventStartDate(ev);const d=ev.day_of_month||(start?start.getDate():null);if(d){if(!m[d])m[d]=[];m[d].push(ev);}});
     return m;
   },[events]);
   const todayEvents=useMemo(()=>(eventsByDay[now.getDate()]||[]).slice(0,3),[eventsByDay]);
@@ -325,7 +336,8 @@ export default function DashboardPage() {
           ) : todayEvents.map((ev,i)=>{
             const colors=['#3B7DD8','#3BA876','#B56B8A'];
             const color=colors[i%colors.length];
-            const time=ev.time||(ev.start_datetime?new Date(ev.start_datetime).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'');
+            const start=getEventStartDate(ev);
+            const time=ev.time||(start?start.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'');
             return (
               <div key={ev.id||i} style={{ display:'flex',gap:10,padding:'8px 0',borderBottom:'1px solid #F0F2F5' }}>
                 <span style={{ fontSize:12,fontWeight:700,color,flexShrink:0,minWidth:42 }}>{time}</span>
