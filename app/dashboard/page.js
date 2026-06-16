@@ -185,11 +185,7 @@ export default function DashboardPage() {
   async function handleFileSelect(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!stores.length) {
-      setError('먼저 가게를 등록해주세요.');
-      e.target.value = '';
-      return;
-    }
+
     const ext = '.' + file.name.split('.').pop().toLowerCase();
     const allowedExtensions = ['.mp3', '.m4a', '.wav', '.ogg', '.mp4'];
     if (!allowedExtensions.includes(ext)) {
@@ -207,7 +203,7 @@ export default function DashboardPage() {
     setMessage('');
     try {
       const uploadRes = await callApi.requestUpload({
-        storeId: stores[0].id,
+        storeId: stores[0]?.id || '',
         fileName: file.name,
         fileFormat,
         mimeType,
@@ -298,7 +294,7 @@ export default function DashboardPage() {
 
         <section className="bg-white border border-line rounded-[16px] p-5 mb-5">
           <input ref={fileInputRef} type="file" accept="audio/*,.m4a,.mp3,.wav,.ogg,.mp4" onChange={handleFileSelect} disabled={uploading} className="hidden" />
-          <button onClick={() => fileInputRef.current?.click()} disabled={uploading || !stores.length} className="w-full border-2 border-dashed border-line rounded-[12px] p-5 text-left hover:border-brand-blue disabled:opacity-50">
+          <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
             <div className="font-bold text-ink-primary">{uploading ? '업로드 중...' : '통화 녹음 파일 업로드'}</div>
             <div className="text-[13px] text-ink-tertiary">m4a, mp3, wav, ogg, mp4</div>
           </button>
