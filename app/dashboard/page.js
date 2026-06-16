@@ -103,7 +103,12 @@ export default function DashboardPage() {
 
   const handleFileSelect=async(e)=>{
     const file=e.target.files?.[0];
-    if(!file||stores.length===0){e.target.value='';return;}
+    if(!file){e.target.value='';return;}
+    if(stores.length===0){
+      e.target.value='';
+      router.push('/stores/new');
+      return;
+    }
     const ext='.'+file.name.split('.').pop().toLowerCase();
     if(!['.mp3','.m4a','.wav','.ogg','.mp4'].includes(ext)){e.target.value='';return;}
     setUploading(true);setUploadProgress(0);
@@ -148,6 +153,13 @@ export default function DashboardPage() {
   const linkStyle={fontSize:12,color:AccentBlue,textDecoration:'none'};
 
   // 업로드 버튼 (헤더 우측) — label 방식으로 맥 Safari 호환
+  const handleUploadEntryClick=(e)=>{
+    if(stores.length===0){
+      e.preventDefault();
+      router.push('/stores/new');
+    }
+  };
+
   const uploadAction = (
     <>
       <input
@@ -156,16 +168,16 @@ export default function DashboardPage() {
         type="file"
         accept="audio/*,.m4a,.mp3,.wav"
         onChange={handleFileSelect}
-        disabled={uploading || stores.length === 0}
+        disabled={uploading}
         style={{ position:'absolute', width:1, height:1, opacity:0, overflow:'hidden', clip:'rect(0,0,0,0)', whiteSpace:'nowrap' }}
       />
-      <label htmlFor="dashboard-file-upload" style={{
+      <label htmlFor="dashboard-file-upload" onClick={handleUploadEntryClick} style={{
         display:'flex', alignItems:'center', gap:6,
         background:'rgba(255,255,255,0.15)', borderRadius:8, padding:'6px 12px',
-        color:'white', cursor: uploading || stores.length === 0 ? 'not-allowed' : 'pointer',
-        fontSize:12, fontWeight:600, opacity: uploading || stores.length === 0 ? 0.6 : 1,
+        color:'white', cursor: uploading ? 'not-allowed' : 'pointer',
+        fontSize:12, fontWeight:600, opacity: uploading ? 0.6 : 1,
       }}>
-        {uploading ? `⏳ ${uploadProgress}%` : `📤 업로드`}
+        {uploading ? `⏳ ${uploadProgress}%` : stores.length===0 ? `🏪 가게 등록` : `📤 업로드`}
       </label>
     </>
   );
@@ -180,10 +192,10 @@ export default function DashboardPage() {
             통화 분석 대기 <span style={{ color:'#6FA8F0' }}>{pendingCount}건</span>
           </p>
         </div>
-        <label htmlFor="dashboard-file-upload" style={{
+        <label htmlFor="dashboard-file-upload" onClick={handleUploadEntryClick} style={{
           background:'rgba(255,255,255,0.15)', borderRadius:10, padding:'10px 14px',
-          color:White, cursor: uploading||stores.length===0 ? 'not-allowed' : 'pointer',
-          fontSize:20, opacity: uploading||stores.length===0 ? 0.6 : 1,
+          color:White, cursor: uploading ? 'not-allowed' : 'pointer',
+          fontSize:20, opacity: uploading ? 0.6 : 1,
         }}>
           🔄
         </label>
