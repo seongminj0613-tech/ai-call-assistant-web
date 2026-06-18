@@ -10,8 +10,6 @@ import Logo from '../../app/components/Logo';
 
 const CALENDAR_PROVIDERS = [
   { id: 'google', label: 'Google' },
-  { id: 'naver', label: 'Naver' },
-  { id: 'kakao', label: 'Kakao' },
 ];
 
 const CATEGORY_LABELS = {
@@ -262,7 +260,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
               <h2 className="text-[17px] font-bold text-ink-primary">캘린더 연동</h2>
-              <p className="text-[13px] text-ink-secondary">Google / Naver / Kakao 캘린더를 연결한 뒤 예약 카드를 일정으로 등록합니다.</p>
+              <p className="text-[13px] text-ink-secondary">Google 캘린더를 연결한 뒤 예약 카드를 일정으로 등록합니다.</p>
             </div>
             <button onClick={loadAll} disabled={loading} className="text-[12px] border border-line rounded-[8px] px-3 py-2">새로고침</button>
           </div>
