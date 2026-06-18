@@ -182,8 +182,13 @@ export default function CustomersPage() {
     }
   }
 
-  return (
-    <PageShell title="고객관리" active="customers">
+ return (
+  <PageShell
+    title="고객관리"
+    active="customers"
+    top={<div className="h-[200px]" />}
+  >
+    <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
       <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
 
       <div className="px-[24px] pt-[24px]">
@@ -205,7 +210,7 @@ export default function CustomersPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-[8px] max-h-[550px] overflow-y-auto no-scrollbar">
+          <div className="flex flex-col gap-[8px] max-h-[calc(80vh-260px)] overflow-y-auto no-scrollbar">
             {loading ? (
               <div className="py-8 text-center text-[12px] text-[#99a1b0]">불러오는 중...</div>
             ) : error ? (
@@ -237,7 +242,7 @@ export default function CustomersPage() {
         </div>
 
         {/* 오른쪽: 상세 (이 영역만 스크롤) */}
-        <div className="flex-1 min-w-0 flex flex-col gap-[20px] max-h-[calc(96vh-90px)] overflow-y-auto no-scrollbar">
+        <div className="flex-1 min-w-0 flex flex-col gap-[20px] max-h-[calc(60vh-0px)] overflow-y-auto no-scrollbar">
           {!customer ? (
             <div className="py-16 text-center text-[12px] text-[#99a1b0]">고객을 선택하세요.</div>
           ) : (
@@ -245,11 +250,11 @@ export default function CustomersPage() {
               {/* 고객 상세 헤더 */}
               <div className="flex flex-col">
                 <div className="flex items-center justify-between pb-[8px] border-b border-[#343659]">
-                  <span className="text-[20px] font-bold text-[#343659]">고객 상세</span>
+                  <span className="text-[14px] font-bold text-[#343659]">고객 상세</span>
                   <span className="text-[11px] text-[#99a1b0]">{customer.count}통화</span>
                 </div>
                 <div className="mt-[12px] flex items-baseline gap-[10px] flex-wrap">
-                  <span className="text-[15px] font-bold text-[#343659]">{customer.name || customer.phone}</span>
+                  <span className="text-[18px] font-bold text-[#343659]">{customer.name || customer.phone}</span>
                   {customer.name && customer.name !== customer.phone && (
                     <span className="text-[13px] text-[#99a1b0]">{customer.phone}</span>
                   )}

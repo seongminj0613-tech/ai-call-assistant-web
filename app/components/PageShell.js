@@ -36,7 +36,7 @@ export default function PageShell({ title, active, top = null, children }) {
 
         {top}
 
-        <section className="relative bg-white w-full rounded-t-[24px] flex-1 text-[#343659]">
+        <section className="relative bg-white w-full rounded-t-[24px] flex-1 text-[#343659] flex flex-col">
           <SideNav active={active} />
           {children}
         </section>
