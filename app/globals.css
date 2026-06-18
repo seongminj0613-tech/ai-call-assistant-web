@@ -105,3 +105,13 @@ body {
     border-radius: 4px;
   }
 }
+/* ───────────────────────────────────────────
+   스크롤바 숨김 (스크롤은 되고 막대만 안 보임)
+   ─────────────────────────────────────────── */
+.no-scrollbar {
+  -ms-overflow-style: none;   /* IE/Edge */
+  scrollbar-width: none;      /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;              /* Chrome/Safari */
+}
