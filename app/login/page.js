@@ -8,7 +8,6 @@ import Logo from '../components/Logo';
 const SOCIAL_LOGIN_PROVIDERS = [
   { id: 'kakao', label: '카카오로 시작하기', bg: '#FEE500', color: 'rgba(0,0,0,0.85)' },
   { id: 'google', label: 'Google로 시작하기', bg: '#FFFFFF', color: '#1f2937', border: true },
-  { id: 'naver', label: '네이버로 시작하기', bg: '#03C75A', color: '#FFFFFF' },
 ];
 
 export default function LoginPage() {
